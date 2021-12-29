@@ -1,9 +1,9 @@
 {
-    "name": "zachleigh/laravel-property-bag",
+    "name": "agensoftware/laravel-property-bag",
     "description": "Easy Laravel user settings using a property bag",
     "type": "project",
     "keywords": ["laravel", "user", "settings", "property", "user settings", "propety bag"],
-    "homepage": "https://github.com/zachleigh/laravel-property-bag",
+    "homepage": "https://github.com/agentsoftware/laravel-property-bag",
     "license": "MIT",
     "authors": [
         {
