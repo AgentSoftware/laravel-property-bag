@@ -24,6 +24,10 @@ class ServiceProvider extends BaseProvider
     public function boot()
     {
         $this->publishes([
+            __DIR__.'/../config/property_bag.php' => config_path('property_bag.php'),
+        ]);
+        
+        $this->publishes([
             __DIR__.'/Migrations/' => database_path('migrations'),
         ], 'migrations');
     }
