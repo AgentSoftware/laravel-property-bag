@@ -1,5 +1,5 @@
 {
-    "name": "agensoftware/laravel-property-bag",
+    "name": "agentsoftware/laravel-property-bag",
     "description": "Easy Laravel user settings using a property bag",
     "type": "project",
     "keywords": ["laravel", "user", "settings", "property", "user settings", "propety bag"],
