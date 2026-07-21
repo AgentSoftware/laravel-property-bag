@@ -1,25 +1,37 @@
 {
     "name": "agentsoftware/laravel-property-bag",
     "description": "Easy Laravel user settings using a property bag",
-    "type": "project",
-    "keywords": ["laravel", "user", "settings", "property", "user settings", "propety bag"],
+    "type": "library",
+    "keywords": ["laravel", "user", "settings", "property", "user settings", "property bag"],
     "homepage": "https://github.com/agentsoftware/laravel-property-bag",
     "license": "MIT",
     "authors": [
         {
             "name": "Zach Leigh",
             "email": "zachleigh@fastmail.jp"
+        },
+        {
+            "name": "AgentSoftware",
+            "homepage": "https://agentsoftware.net"
         }
     ],
+    "support": {
+        "issues": "https://github.com/AgentSoftware/laravel-property-bag/issues",
+        "source": "https://github.com/AgentSoftware/laravel-property-bag"
+    },
 
     "require": {
-        "php": ">=7.1"
+        "php": "^8.2",
+        "illuminate/support": "^12.0||^13.0",
+        "illuminate/console": "^12.0||^13.0",
+        "illuminate/database": "^12.0||^13.0",
+        "illuminate/container": "^12.0||^13.0"
     },
 
     "require-dev": {
-        "laravel/laravel": "^6.0",
-        "laravel/browser-kit-testing": "~1.0",
-        "phpunit/phpunit": "~4.0"
+        "orchestra/testbench": "^10.0||^11.0",
+        "larastan/larastan": "^3.0",
+        "laravel/pint": "^1.0"
     },
 
     "autoload": {
@@ -36,6 +48,12 @@
 
     "minimum-stability": "stable",
     "prefer-stable": true,
+    "config": {
+        "platform": {
+            "php": "8.2"
+        },
+        "sort-packages": true
+    },
     "extra":{
         "laravel":{
             "providers":[
