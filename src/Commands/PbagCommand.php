@@ -3,6 +3,7 @@
 namespace LaravelPropertyBag\Commands;
 
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\File;
 
 class PbagCommand extends Command
@@ -12,7 +13,7 @@ class PbagCommand extends Command
      */
     protected function makeDir(string $dir): void
     {
-        $dirPath = base_path('app/'.ltrim($dir, '/'));
+        $dirPath = App::basePath('app/'.ltrim($dir, '/'));
 
         if (! File::exists($dirPath)) {
             File::makeDirectory($dirPath);

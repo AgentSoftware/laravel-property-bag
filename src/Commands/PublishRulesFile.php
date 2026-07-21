@@ -2,6 +2,7 @@
 
 namespace LaravelPropertyBag\Commands;
 
+use Illuminate\Support\Facades\App;
 use LaravelPropertyBag\Helpers\NameResolver;
 
 class PublishRulesFile extends PbagCommand
@@ -46,7 +47,7 @@ class PublishRulesFile extends PbagCommand
         $stub = $this->replace('{{Namespace}}', $namespace, $stub);
 
         file_put_contents(
-            base_path('app/Settings/Resources/Rules.php'),
+            App::basePath('app/Settings/Resources/Rules.php'),
             $stub
         );
     }

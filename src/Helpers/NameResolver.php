@@ -2,6 +2,9 @@
 
 namespace LaravelPropertyBag\Helpers;
 
+use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Config;
+
 class NameResolver
 {
     /**
@@ -9,17 +12,17 @@ class NameResolver
      */
     public static function getAppNamespace(): string
     {
-        return app()->getNamespace();
+        return App::getNamespace();
     }
 
     private static function getConfigNamespace(): ?string
     {
-        // config() is statically typed to return mixed; the ?string return type here
+        // Config::get() is statically typed to return mixed; the ?string return type here
         // is enforced natively by PHP at runtime, so a misconfigured non-string/
         // non-null value already fails fast with a TypeError rather than being
         // silently coerced.
         // @phpstan-ignore return.type
-        return config('property_bag.namespace');
+        return Config::get('property_bag.namespace');
     }
 
     /**

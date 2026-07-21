@@ -88,6 +88,10 @@ bundled `PropertyBag` class).
   They are excluded from both Pint (`pint.json`) and PHPStan
   (`phpstan.neon.dist`) for that reason — don't try to "fix" them into valid
   PHP or remove the exclusion.
+- **Prefer Laravel facades over global helper functions in package code**
+  (e.g. `App::`/`Config::`/`Validator::` over `app()`/`config()`/
+  `validator()`); helpers without a facade equivalent (`collect()`,
+  `value()`, `data_get()`) are fine.
 - **`config.platform.php: 8.2` pin in `composer.json`.** This forces Composer
   to resolve dependencies as if PHP 8.2 were the running interpreter,
   regardless of the actual interpreter — so a plain `composer install`/

@@ -5,6 +5,7 @@ namespace LaravelPropertyBag\Settings;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Request;
 use LaravelPropertyBag\Exceptions\ResourceNotFound;
 use LaravelPropertyBag\Helpers\NameResolver;
 
@@ -118,7 +119,7 @@ trait HasSettings
     {
         $allAllowedSettings = array_keys($this->allSettings()->toArray());
 
-        $this->settings()->set(request()->only($allAllowedSettings));
+        $this->settings()->set(Request::only($allAllowedSettings));
     }
 
     /**

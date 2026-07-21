@@ -2,6 +2,7 @@
 
 namespace LaravelPropertyBag\Commands;
 
+use Illuminate\Support\Facades\App;
 use LaravelPropertyBag\Helpers\NameResolver;
 
 class PublishSettingsConfig extends PbagCommand
@@ -56,7 +57,7 @@ class PublishSettingsConfig extends PbagCommand
         $stub = $this->replace('{{ClassName}}', $name, $stub);
 
         file_put_contents(
-            base_path("app/Settings/{$name}.php"),
+            App::basePath("app/Settings/{$name}.php"),
             $stub
         );
     }

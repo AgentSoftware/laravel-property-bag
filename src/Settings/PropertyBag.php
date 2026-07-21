@@ -3,6 +3,7 @@
 namespace LaravelPropertyBag\Settings;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Config;
 
 /**
  * Note: $value is annotated as `string`, not the `array` its cast declares, because
@@ -56,9 +57,9 @@ class PropertyBag extends Model
      */
     public static function resolveModel(): string
     {
-        $model = config('property_bag.model');
+        $model = Config::get('property_bag.model');
 
-        // config() is statically typed to return mixed; the string return type here
+        // Config::get() is statically typed to return mixed; the string return type here
         // is enforced natively by PHP at runtime, so a misconfigured non-string
         // value already fails fast with a TypeError rather than being silently
         // coerced. The truthy check preserves the original `?:` semantics.

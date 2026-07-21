@@ -2,6 +2,7 @@
 
 namespace LaravelPropertyBag;
 
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\ServiceProvider as BaseProvider;
 use LaravelPropertyBag\Commands\PublishRulesFile;
 use LaravelPropertyBag\Commands\PublishSettingsConfig;
@@ -27,11 +28,11 @@ class ServiceProvider extends BaseProvider
     public function boot(): void
     {
         $this->publishes([
-            __DIR__.'/../config/property_bag.php' => config_path('property_bag.php'),
+            __DIR__.'/../config/property_bag.php' => App::configPath('property_bag.php'),
         ], 'config');
 
         $this->publishes([
-            __DIR__.'/Migrations/' => database_path('migrations'),
+            __DIR__.'/Migrations/' => App::databasePath('migrations'),
         ], 'migrations');
     }
 }
