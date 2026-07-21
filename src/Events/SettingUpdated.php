@@ -3,12 +3,9 @@
 namespace LaravelPropertyBag\Events;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Foundation\Events\Dispatchable;
 
 class SettingUpdated
 {
-    use Dispatchable;
-
     /**
      * Construct.
      */
