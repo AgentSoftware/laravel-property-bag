@@ -5,6 +5,9 @@ namespace LaravelPropertyBag\Settings;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Event;
+use LaravelPropertyBag\Events\SettingReset;
+use LaravelPropertyBag\Events\SettingUpdated;
 use LaravelPropertyBag\Exceptions\InvalidSettingsValue;
 use LaravelPropertyBag\Settings\Rules\RuleValidator;
 
@@ -272,16 +275,30 @@ class Settings
         $this->validateKeyValue($key, $value);
 
         if ($this->isDefault($key, $value) && $this->isSaved($key)) {
+            $oldValue = $this->allSaved()->get($key);
+
             $this->deleteRecord($key);
+
+            Event::dispatch(new SettingReset($this->resource, $key, $oldValue, $this->getDefault($key)));
 
             return null;
         } elseif ($this->isDefault($key, $value)) {
             return null;
         } elseif ($this->isSaved($key)) {
-            return $this->updateRecord($key, $value);
+            $oldValue = $this->allSaved()->get($key);
+
+            $record = $this->updateRecord($key, $value);
+
+            Event::dispatch(new SettingUpdated($this->resource, $key, $oldValue, $value, wasCreated: false));
+
+            return $record;
         }
 
-        return $this->createRecord($key, $value);
+        $record = $this->createRecord($key, $value);
+
+        Event::dispatch(new SettingUpdated($this->resource, $key, $this->getDefault($key), $value, wasCreated: true));
+
+        return $record;
     }
 
     /**
