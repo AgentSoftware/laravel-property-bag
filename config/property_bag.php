@@ -1,5 +1,7 @@
 <?php
 
+use LaravelPropertyBag\Settings\PropertyBag;
+
 return [
 
     /*
@@ -15,5 +17,19 @@ return [
     */
 
     // 'namespace' => 'MyApp\\Settings',
+
+    /*
+    |--------------------------------------------------------------------------
+    | PropertyBag Model
+    |--------------------------------------------------------------------------
+    |
+    | By default, LaravelPropertyBag stores settings using its own PropertyBag
+    | Eloquent model. Set this value to your own model class (extending
+    | LaravelPropertyBag\Settings\PropertyBag) to override the model used to
+    | read and write property bag rows.
+    |
+    */
+
+    'model' => PropertyBag::class,
 
 ];

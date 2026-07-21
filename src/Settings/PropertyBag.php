@@ -31,4 +31,13 @@ class PropertyBag extends Model
     protected $casts = [
         'value' => 'array',
     ];
+
+    /**
+     * Resolve the model class used to store property bag records, allowing
+     * consumers to override the default via the `property_bag.model` config.
+     */
+    public static function resolveModel(): string
+    {
+        return config('property_bag.model') ?: self::class;
+    }
 }

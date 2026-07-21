@@ -2,41 +2,42 @@
 
 namespace LaravelPropertyBag\Settings;
 
-use LaravelPropertyBag\Helpers\NameResolver;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Support\Collection;
 use LaravelPropertyBag\Exceptions\ResourceNotFound;
+use LaravelPropertyBag\Helpers\NameResolver;
 
 trait HasSettings
 {
     /**
      * Instance of Settings.
      *
-     * @var \LaravelPropertyBag\Settings\Settings
+     * @var Settings
      */
     protected $settings = null;
 
     /**
      * A resource has many settings in a property bag.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\MorphMany
+     * @return MorphMany
      */
     public function propertyBag()
     {
-        return $this->morphMany(PropertyBag::class, 'resource');
+        return $this->morphMany(PropertyBag::resolveModel(), 'resource');
     }
 
     /**
      * If passed is string, get settings class for the resource or return value
      * for given key. If passed is array, set the key value pair.
      *
-     * @param string|array $passed
-     *
-     * @return \LaravelPropertyBag\Settings\Settings|mixed
+     * @param  string|array  $passed
+     * @return Settings|mixed
      */
     public function settings($passed = null)
     {
         if (is_array($passed)) {
             return $this->setSettings($passed);
-        } elseif (!is_null($passed)) {
+        } elseif (! is_null($passed)) {
             $settings = $this->getSettingsInstance();
 
             return $settings->get($passed);
@@ -48,7 +49,7 @@ trait HasSettings
     /**
      * Get settings off this or create new instance.
      *
-     * @return \LaravelPropertyBag\Settings\Settings
+     * @return Settings
      */
     protected function getSettingsInstance()
     {
@@ -64,9 +65,10 @@ trait HasSettings
     /**
      * Get the settings class name.
      *
-     * @throws ResourceNotFound
      *
-     * @return \LaravelPropertyBag\Settings\ResourceConfig
+     * @return ResourceConfig
+     *
+     * @throws ResourceNotFound
      */
     protected function getSettingsConfig()
     {
@@ -100,9 +102,8 @@ trait HasSettings
     /**
      * Set settings.
      *
-     * @param array $attributes
      *
-     * @return \LaravelPropertyBag\Settings\Settings
+     * @return Settings
      */
     public function setSettings(array $attributes)
     {
@@ -112,7 +113,7 @@ trait HasSettings
     /**
      * Set all allowed settings by Request.
      *
-     * @return \LaravelPropertyBag\Settings\Settings
+     * @return Settings
      */
     public function setSettingsByRequest()
     {
@@ -124,7 +125,7 @@ trait HasSettings
     /**
      * Get all settings.
      *
-     * @return \Illuminate\Support\Collection
+     * @return Collection
      */
     public function allSettings()
     {
@@ -134,13 +135,12 @@ trait HasSettings
     /**
      * Get all default settings or default setting for single key if given.
      *
-     * @param string $key
-     *
-     * @return \Illuminate\Support\Collection|mixed
+     * @param  string  $key
+     * @return Collection|mixed
      */
     public function defaultSetting($key = null)
     {
-        if (!is_null($key)) {
+        if (! is_null($key)) {
             return $this->settings()->getDefault($key);
         }
 
@@ -150,13 +150,12 @@ trait HasSettings
     /**
      * Get all allowed settings or allowed settings for single ke if given.
      *
-     * @param string $key
-     *
-     * @return \Illuminate\Support\Collection
+     * @param  string  $key
+     * @return Collection
      */
     public function allowedSetting($key = null)
     {
-        if (!is_null($key)) {
+        if (! is_null($key)) {
             return $this->settings()->getAllowed($key);
         }
 
@@ -166,21 +165,20 @@ trait HasSettings
     /**
      * Get a collection with all users with the given setting and/or value.
      *
-     * @param string $key
-     * @param mixed  $value
-     *
-     * @return \Illuminate\Support\Collection
+     * @param  string  $key
+     * @param  mixed  $value
+     * @return Collection
      */
     public static function withSetting($key, $value = null)
     {
         return static::all()->filter(function ($row) use ($key, $value) {
             $setting = $row->settings($key);
 
-            if (!is_null($value)) {
-                return !is_null($setting) && $setting === $value;
+            if (! is_null($value)) {
+                return ! is_null($setting) && $setting === $value;
             }
 
-            return !is_null($setting);
+            return ! is_null($setting);
         });
     }
 }

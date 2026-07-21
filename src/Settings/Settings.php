@@ -3,15 +3,17 @@
 namespace LaravelPropertyBag\Settings;
 
 use Illuminate\Database\Eloquent\Model;
-use LaravelPropertyBag\Settings\Rules\RuleValidator;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Support\Collection;
 use LaravelPropertyBag\Exceptions\InvalidSettingsValue;
+use LaravelPropertyBag\Settings\Rules\RuleValidator;
 
 class Settings
 {
     /**
      * Settings for resource.
      *
-     * @var \LaravelPropertyBag\Settings\ResourceConfig
+     * @var ResourceConfig
      */
     protected $settingsConfig;
 
@@ -26,36 +28,33 @@ class Settings
      * Registered keys, values, and defaults.
      * 'key' => ['allowed' => $value, 'default' => $value].
      *
-     * @var \Illuminate\Support\Collection
+     * @var Collection
      */
     protected $registered;
 
     /**
      * Settings saved in database. Does not include defaults.
      *
-     * @var \Illuminate\Support\Collection
+     * @var Collection
      */
     protected $settings;
 
     /**
      * Validator for allowed rules.
      *
-     * @var \LaravelPropertyBag\Settings\Rules\RuleValidator
+     * @var RuleValidator
      */
     protected $ruleValidator;
 
     /**
      * Construct.
-     *
-     * @param ResourceConfig $settingsConfig
-     * @param Model          $resource
      */
     public function __construct(ResourceConfig $settingsConfig, Model $resource)
     {
         $this->settingsConfig = $settingsConfig;
         $this->resource = $resource;
 
-        $this->ruleValidator = new RuleValidator();
+        $this->ruleValidator = new RuleValidator;
         $this->registered = $settingsConfig->registeredSettings();
 
         $this->sync();
@@ -64,7 +63,7 @@ class Settings
     /**
      * Get the property bag relationshp off the resource.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\MorphMany
+     * @return MorphMany
      */
     protected function propertyBag()
     {
@@ -74,7 +73,7 @@ class Settings
     /**
      * Get resource config.
      *
-     * @return \LaravelPropertyBag\Settings\ResourceConfig
+     * @return ResourceConfig
      */
     public function getResourceConfig()
     {
@@ -84,7 +83,7 @@ class Settings
     /**
      * Get registered settings.
      *
-     * @return \Illuminate\Support\Collection
+     * @return Collection
      */
     public function getRegistered()
     {
@@ -94,8 +93,7 @@ class Settings
     /**
      * Return true if key exists in registered settings collection.
      *
-     * @param string $key
-     *
+     * @param  string  $key
      * @return bool
      */
     public function isRegistered($key)
@@ -106,9 +104,8 @@ class Settings
     /**
      * Return true if key and value are registered values.
      *
-     * @param string $key
-     * @param mixed  $value
-     *
+     * @param  string  $key
+     * @param  mixed  $value
      * @return bool
      */
     public function isValid($key, $value)
@@ -119,7 +116,7 @@ class Settings
 
         $allowed = $settings->get('allowed');
 
-        if (!is_array($allowed) &&
+        if (! is_array($allowed) &&
             $rule = $this->ruleValidator->isRule($allowed)) {
             return $this->ruleValidator->validate($rule, $value);
         }
@@ -130,9 +127,8 @@ class Settings
     /**
      * Return true if value is default value for key.
      *
-     * @param string $key
-     * @param mixed  $value
-     *
+     * @param  string  $key
+     * @param  mixed  $value
      * @return bool
      */
     public function isDefault($key, $value)
@@ -143,8 +139,7 @@ class Settings
     /**
      * Get the default value from registered.
      *
-     * @param string $key
-     *
+     * @param  string  $key
      * @return mixed
      */
     public function getDefault($key)
@@ -157,7 +152,7 @@ class Settings
     /**
      * Return all settings used by resource, including defaults.
      *
-     * @return \Illuminate\Support\Collection
+     * @return Collection
      */
     public function all()
     {
@@ -175,7 +170,7 @@ class Settings
     /**
      * Get all defaults for settings.
      *
-     * @return \Illuminate\Support\Collection
+     * @return Collection
      */
     public function allDefaults()
     {
@@ -187,9 +182,8 @@ class Settings
     /**
      * Get the allowed settings for key.
      *
-     * @param string $key
-     *
-     * @return \Illuminate\Support\Collection
+     * @param  string  $key
+     * @return Collection
      */
     public function getAllowed($key)
     {
@@ -201,7 +195,7 @@ class Settings
     /**
      * Get all allowed values for settings.
      *
-     * @return \Illuminate\Support\Collection
+     * @return Collection
      */
     public function allAllowed()
     {
@@ -213,7 +207,7 @@ class Settings
     /**
      * Get all saved settings. Default values are not included in this output.
      *
-     * @return \Illuminate\Support\Collection
+     * @return Collection
      */
     public function allSaved()
     {
@@ -223,7 +217,6 @@ class Settings
     /**
      * Update or add multiple values to the settings table.
      *
-     * @param array $attributes
      *
      * @return static
      */
@@ -247,9 +240,8 @@ class Settings
     /**
      * Return true if key is set to value.
      *
-     * @param string $key
-     * @param string $value
-     *
+     * @param  string  $key
+     * @param  string  $value
      * @return bool
      */
     public function keyIs($key, $value)
@@ -260,8 +252,7 @@ class Settings
     /**
      * Reset key to default value. Return default value.
      *
-     * @param string $key
-     *
+     * @param  string  $key
      * @return mixed
      */
     public function reset($key)
@@ -276,9 +267,8 @@ class Settings
     /**
      * Set a value to a key in local and database settings.
      *
-     * @param string $key
-     * @param mixed  $value
-     *
+     * @param  string  $key
+     * @param  mixed  $value
      * @return mixed
      */
     protected function setKeyValue($key, $value)
@@ -299,14 +289,14 @@ class Settings
     /**
      * Throw exception if key/value invalid.
      *
-     * @param string $key
-     * @param mixed  $value
+     * @param  string  $key
+     * @param  mixed  $value
      *
      * @throws InvalidSettingsValue
      */
     protected function validateKeyValue($key, $value)
     {
-        if (!$this->isValid($key, $value)) {
+        if (! $this->isValid($key, $value)) {
             throw InvalidSettingsValue::settingNotAllowed($key);
         }
     }
@@ -314,8 +304,7 @@ class Settings
     /**
      * Return true if key is already saved in database.
      *
-     * @param string $key
-     *
+     * @param  string  $key
      * @return bool
      */
     public function isSaved($key)
@@ -326,16 +315,17 @@ class Settings
     /**
      * Create a new PropertyBag record.
      *
-     * @param string $key
-     * @param mixed  $value
-     *
-     * @return \LaravelPropertyBag\Settings\PropertyBag
+     * @param  string  $key
+     * @param  mixed  $value
+     * @return PropertyBag
      */
     protected function createRecord($key, $value)
     {
+        $propertyBagModel = PropertyBag::resolveModel();
+
         return $this->propertyBag()->save(
-            new PropertyBag([
-                'key'   => $key,
+            new $propertyBagModel([
+                'key' => $key,
                 'value' => $this->valueToJson($value),
             ])
         );
@@ -344,10 +334,9 @@ class Settings
     /**
      * Update a PropertyBag record.
      *
-     * @param string $key
-     * @param mixed  $value
-     *
-     * @return \LaravelPropertyBag\Settings\PropertyBag
+     * @param  string  $key
+     * @param  mixed  $value
+     * @return PropertyBag
      */
     protected function updateRecord($key, $value)
     {
@@ -363,8 +352,7 @@ class Settings
     /**
      * Json encode value.
      *
-     * @param mixed $value
-     *
+     * @param  mixed  $value
      * @return string
      */
     protected function valueToJson($value)
@@ -375,8 +363,7 @@ class Settings
     /**
      * Delete a PropertyBag record.
      *
-     * @param string $key
-     *
+     * @param  string  $key
      * @return bool
      */
     protected function deleteRecord($key)
@@ -387,9 +374,8 @@ class Settings
     /**
      * Get a property bag record by key.
      *
-     * @param string $key
-     *
-     * @return \LaravelPropertyBag\Settings\PropertyBag
+     * @param  string  $key
+     * @return PropertyBag
      */
     protected function getByKey($key)
     {
@@ -410,7 +396,7 @@ class Settings
     /**
      * Get all settings as a flat collection.
      *
-     * @return \Illuminate\Support\Collection
+     * @return Collection
      */
     protected function getAllSettingsFlat()
     {
@@ -422,7 +408,7 @@ class Settings
     /**
      * Retrieve all settings from database.
      *
-     * @return \Illuminate\Support\Collection
+     * @return Collection
      */
     protected function getAllSettings()
     {
@@ -438,8 +424,7 @@ class Settings
     /**
      * Get value from settings by key. Get registered default if not set.
      *
-     * @param string $key
-     *
+     * @param  string  $key
      * @return mixed
      */
     public function get($key)
