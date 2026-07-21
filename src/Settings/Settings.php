@@ -12,39 +12,29 @@ class Settings
 {
     /**
      * Settings for resource.
-     *
-     * @var ResourceConfig
      */
-    protected $settingsConfig;
+    protected ResourceConfig $settingsConfig;
 
     /**
      * Resource that has settings.
-     *
-     * @var Model
      */
-    protected $resource;
+    protected Model $resource;
 
     /**
      * Registered keys, values, and defaults.
      * 'key' => ['allowed' => $value, 'default' => $value].
-     *
-     * @var Collection
      */
-    protected $registered;
+    protected Collection $registered;
 
     /**
      * Settings saved in database. Does not include defaults.
-     *
-     * @var Collection
      */
-    protected $settings;
+    protected Collection $settings;
 
     /**
      * Validator for allowed rules.
-     *
-     * @var RuleValidator
      */
-    protected $ruleValidator;
+    protected RuleValidator $ruleValidator;
 
     /**
      * Construct.
@@ -62,53 +52,40 @@ class Settings
 
     /**
      * Get the property bag relationshp off the resource.
-     *
-     * @return MorphMany
      */
-    protected function propertyBag()
+    protected function propertyBag(): MorphMany
     {
         return $this->resource->propertyBag();
     }
 
     /**
      * Get resource config.
-     *
-     * @return ResourceConfig
      */
-    public function getResourceConfig()
+    public function getResourceConfig(): ResourceConfig
     {
         return $this->settingsConfig;
     }
 
     /**
      * Get registered settings.
-     *
-     * @return Collection
      */
-    public function getRegistered()
+    public function getRegistered(): Collection
     {
         return $this->registered;
     }
 
     /**
      * Return true if key exists in registered settings collection.
-     *
-     * @param  string  $key
-     * @return bool
      */
-    public function isRegistered($key)
+    public function isRegistered(string $key): bool
     {
         return $this->getRegistered()->has($key);
     }
 
     /**
      * Return true if key and value are registered values.
-     *
-     * @param  string  $key
-     * @param  mixed  $value
-     * @return bool
      */
-    public function isValid($key, $value)
+    public function isValid(string $key, mixed $value): bool
     {
         $settings = collect(
             $this->getRegistered()->get($key, ['allowed' => []])
@@ -126,35 +103,28 @@ class Settings
 
     /**
      * Return true if value is default value for key.
-     *
-     * @param  string  $key
-     * @param  mixed  $value
-     * @return bool
      */
-    public function isDefault($key, $value)
+    public function isDefault(string $key, mixed $value): bool
     {
         return $this->getDefault($key) === $value;
     }
 
     /**
      * Get the default value from registered.
-     *
-     * @param  string  $key
-     * @return mixed
      */
-    public function getDefault($key)
+    public function getDefault(string $key): mixed
     {
         if ($this->isRegistered($key)) {
             return $this->getRegistered()[$key]['default'];
         }
+
+        return null;
     }
 
     /**
      * Return all settings used by resource, including defaults.
-     *
-     * @return Collection
      */
-    public function all()
+    public function all(): Collection
     {
         $saved = $this->allSaved();
 
@@ -169,10 +139,8 @@ class Settings
 
     /**
      * Get all defaults for settings.
-     *
-     * @return Collection
      */
-    public function allDefaults()
+    public function allDefaults(): Collection
     {
         return $this->getRegistered()->map(function ($value) {
             return $value['default'];
@@ -181,23 +149,20 @@ class Settings
 
     /**
      * Get the allowed settings for key.
-     *
-     * @param  string  $key
-     * @return Collection
      */
-    public function getAllowed($key)
+    public function getAllowed(string $key): ?Collection
     {
         if ($this->isRegistered($key)) {
             return collect($this->getRegistered()[$key]['allowed']);
         }
+
+        return null;
     }
 
     /**
      * Get all allowed values for settings.
-     *
-     * @return Collection
      */
-    public function allAllowed()
+    public function allAllowed(): Collection
     {
         return $this->getRegistered()->map(function ($value) {
             return $value['allowed'];
@@ -206,10 +171,8 @@ class Settings
 
     /**
      * Get all saved settings. Default values are not included in this output.
-     *
-     * @return Collection
      */
-    public function allSaved()
+    public function allSaved(): Collection
     {
         return collect($this->settings);
     }
@@ -217,10 +180,11 @@ class Settings
     /**
      * Update or add multiple values to the settings table.
      *
-     *
-     * @return static
+     * Note: returns void, not static/self, because it returns the result of
+     * sync() (also void) - this reflects the pre-existing behaviour rather
+     * than the previous docblock's (inaccurate) `@return static`.
      */
-    public function set(array $attributes)
+    public function set(array $attributes): void
     {
         collect($attributes)->each(function ($value, $key) {
             $this->setKeyValue($key, $value);
@@ -234,28 +198,21 @@ class Settings
             $this->resource->load('propertyBag');
         }
 
-        return $this->sync();
+        $this->sync();
     }
 
     /**
      * Return true if key is set to value.
-     *
-     * @param  string  $key
-     * @param  string  $value
-     * @return bool
      */
-    public function keyIs($key, $value)
+    public function keyIs(string $key, string $value): bool
     {
         return $this->get($key) === $value;
     }
 
     /**
      * Reset key to default value. Return default value.
-     *
-     * @param  string  $key
-     * @return mixed
      */
-    public function reset($key)
+    public function reset(string $key): mixed
     {
         $default = $this->getDefault($key);
 
@@ -266,19 +223,15 @@ class Settings
 
     /**
      * Set a value to a key in local and database settings.
-     *
-     * @param  string  $key
-     * @param  mixed  $value
-     * @return mixed
      */
-    protected function setKeyValue($key, $value)
+    protected function setKeyValue(string $key, mixed $value): mixed
     {
         $this->validateKeyValue($key, $value);
 
         if ($this->isDefault($key, $value) && $this->isSaved($key)) {
             return $this->deleteRecord($key);
         } elseif ($this->isDefault($key, $value)) {
-            return;
+            return null;
         } elseif ($this->isSaved($key)) {
             return $this->updateRecord($key, $value);
         }
@@ -289,12 +242,9 @@ class Settings
     /**
      * Throw exception if key/value invalid.
      *
-     * @param  string  $key
-     * @param  mixed  $value
-     *
      * @throws InvalidSettingsValue
      */
-    protected function validateKeyValue($key, $value)
+    protected function validateKeyValue(string $key, mixed $value): void
     {
         if (! $this->isValid($key, $value)) {
             throw InvalidSettingsValue::settingNotAllowed($key);
@@ -303,23 +253,16 @@ class Settings
 
     /**
      * Return true if key is already saved in database.
-     *
-     * @param  string  $key
-     * @return bool
      */
-    public function isSaved($key)
+    public function isSaved(string $key): bool
     {
         return $this->allSaved()->has($key);
     }
 
     /**
      * Create a new PropertyBag record.
-     *
-     * @param  string  $key
-     * @param  mixed  $value
-     * @return PropertyBag
      */
-    protected function createRecord($key, $value)
+    protected function createRecord(string $key, mixed $value): PropertyBag
     {
         $propertyBagModel = PropertyBag::resolveModel();
 
@@ -333,12 +276,8 @@ class Settings
 
     /**
      * Update a PropertyBag record.
-     *
-     * @param  string  $key
-     * @param  mixed  $value
-     * @return PropertyBag
      */
-    protected function updateRecord($key, $value)
+    protected function updateRecord(string $key, mixed $value): PropertyBag
     {
         $record = $this->getByKey($key);
 
@@ -351,33 +290,24 @@ class Settings
 
     /**
      * Json encode value.
-     *
-     * @param  mixed  $value
-     * @return string
      */
-    protected function valueToJson($value)
+    protected function valueToJson(mixed $value): string
     {
         return json_encode([$value]);
     }
 
     /**
      * Delete a PropertyBag record.
-     *
-     * @param  string  $key
-     * @return bool
      */
-    protected function deleteRecord($key)
+    protected function deleteRecord(string $key): void
     {
         $this->getByKey($key)->delete();
     }
 
     /**
      * Get a property bag record by key.
-     *
-     * @param  string  $key
-     * @return PropertyBag
      */
-    protected function getByKey($key)
+    protected function getByKey(string $key): ?PropertyBag
     {
         return $this->propertyBag()
             ->where('resource_id', $this->resource->getKey())
@@ -388,17 +318,15 @@ class Settings
     /**
      * Load settings from the resource relationship on to this.
      */
-    protected function sync()
+    protected function sync(): void
     {
         $this->settings = $this->getAllSettingsFlat();
     }
 
     /**
      * Get all settings as a flat collection.
-     *
-     * @return Collection
      */
-    protected function getAllSettingsFlat()
+    protected function getAllSettingsFlat(): Collection
     {
         return $this->getAllSettings()->flatMap(function (Model $model) {
             return [$model->key => json_decode($model->value)[0]];
@@ -407,10 +335,8 @@ class Settings
 
     /**
      * Retrieve all settings from database.
-     *
-     * @return Collection
      */
-    protected function getAllSettings()
+    protected function getAllSettings(): Collection
     {
         if ($this->resource->relationLoaded('propertyBag')) {
             return $this->resource->propertyBag;
@@ -423,11 +349,8 @@ class Settings
 
     /**
      * Get value from settings by key. Get registered default if not set.
-     *
-     * @param  string  $key
-     * @return mixed
      */
-    public function get($key)
+    public function get(string $key): mixed
     {
         return $this->allSaved()->get($key, function () use ($key) {
             return $this->getDefault($key);

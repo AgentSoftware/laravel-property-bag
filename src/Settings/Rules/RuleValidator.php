@@ -2,22 +2,17 @@
 
 namespace LaravelPropertyBag\Settings\Rules;
 
-use LaravelPropertyBag\Helpers\NameResolver;
 use LaravelPropertyBag\Exceptions\InvalidSettingsRule;
+use LaravelPropertyBag\Helpers\NameResolver;
 
 class RuleValidator
 {
     /**
      * Validate the value given for the rule.
      *
-     * @param string $rule
-     * @param mixed  $value
-     *
      * @throws InvalidSettingsRule
-     *
-     * @return bool
      */
-    public function validate($rule, $value)
+    public function validate(string $rule, mixed $value): bool
     {
         $arguments = $this->buildArgumentArray($rule, $value);
 
@@ -36,12 +31,8 @@ class RuleValidator
 
     /**
      * String is a rule.
-     *
-     * @param string $string
-     *
-     * @return bool|string
      */
-    public function isRule($string)
+    public function isRule(string $string): bool|string
     {
         if ($isRule = preg_match('/:(.*?):/', $string, $match)) {
             return $match[1];
@@ -52,12 +43,8 @@ class RuleValidator
 
     /**
      * Make method name used to validate rule.
-     *
-     * @param string $rule
-     *
-     * @return string
      */
-    protected function makeRuleMethod($rule)
+    protected function makeRuleMethod(string $rule): string
     {
         if (strpos($rule, '=') !== false) {
             $rule = explode('=', $rule)[0];
@@ -68,12 +55,8 @@ class RuleValidator
 
     /**
      * User defined rule method exists.
-     *
-     * @param string $method
-     *
-     * @return bool
      */
-    protected function userDefinedExists($method)
+    protected function userDefinedExists(string $method): bool
     {
         $userDefined = NameResolver::makeRulesFileName();
 
@@ -84,12 +67,9 @@ class RuleValidator
     /**
      * Build argument array from rule and value.
      *
-     * @param string $rule
-     * @param mixed  $value
-     *
-     * @return array
+     * @return array<int, mixed>
      */
-    protected function buildArgumentArray($rule, $value)
+    protected function buildArgumentArray(string $rule, mixed $value): array
     {
         $argumentString = explode('=', $rule);
 

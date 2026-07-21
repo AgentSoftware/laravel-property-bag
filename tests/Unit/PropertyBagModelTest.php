@@ -5,13 +5,12 @@ namespace LaravelPropertyBag\tests\Unit;
 use LaravelPropertyBag\Settings\PropertyBag;
 use LaravelPropertyBag\tests\Classes\CustomPropertyBag;
 use LaravelPropertyBag\tests\TestCase;
+use PHPUnit\Framework\Attributes\Test;
 
 class PropertyBagModelTest extends TestCase
 {
-    /**
-     * @test
-     */
-    public function default_property_bag_model_is_used_when_config_is_unset()
+    #[Test]
+    public function default_property_bag_model_is_used_when_config_is_unset(): void
     {
         $this->assertEquals(PropertyBag::class, PropertyBag::resolveModel());
 
@@ -22,10 +21,8 @@ class PropertyBagModelTest extends TestCase
         $this->assertInstanceOf(PropertyBag::class, $record);
     }
 
-    /**
-     * @test
-     */
-    public function custom_property_bag_model_is_used_when_configured()
+    #[Test]
+    public function custom_property_bag_model_is_used_when_configured(): void
     {
         config(['property_bag.model' => CustomPropertyBag::class]);
 

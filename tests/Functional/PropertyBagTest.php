@@ -3,13 +3,12 @@
 namespace LaravelPropertyBag\tests\Functional;
 
 use LaravelPropertyBag\tests\TestCase;
+use PHPUnit\Framework\Attributes\Test;
 
 class PropertyBagTest extends TestCase
 {
-    /**
-     * @test
-     */
-    public function a_resource_can_access_and_use_the_property_bag()
+    #[Test]
+    public function a_resource_can_access_and_use_the_property_bag(): void
     {
         $group = $this->makeGroup();
 
@@ -83,10 +82,8 @@ class PropertyBagTest extends TestCase
         ]);
     }
 
-    /**
-     * @test
-     */
-    public function multiple_instances_of_same_resource_can_use_settings()
+    #[Test]
+    public function multiple_instances_of_same_resource_can_use_settings(): void
     {
         $user1 = $this->user;
 
@@ -157,10 +154,8 @@ class PropertyBagTest extends TestCase
         ]);
     }
 
-    /**
-     * @test
-     */
-    public function multiple_resources_can_use_settings()
+    #[Test]
+    public function multiple_resources_can_use_settings(): void
     {
         $group = $this->makeGroup();
 

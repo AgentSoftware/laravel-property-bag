@@ -10,10 +10,8 @@ class ServiceProvider extends BaseProvider
 {
     /**
      * Register bindings in the container.
-     *
-     * @return void
      */
-    public function register()
+    public function register(): void
     {
         $this->mergeConfigFrom(__DIR__.'/../config/property_bag.php', 'property_bag');
 
@@ -25,10 +23,8 @@ class ServiceProvider extends BaseProvider
 
     /**
      * Register any other events for your application.
-     *
-     * @return void
      */
-    public function boot()
+    public function boot(): void
     {
         $this->publishes([
             __DIR__.'/../config/property_bag.php' => config_path('property_bag.php'),

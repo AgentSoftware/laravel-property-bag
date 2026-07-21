@@ -9,6 +9,10 @@ class PropertyBag extends Model
     /**
      * The table associated with the model.
      *
+     * Note: left untyped natively - Illuminate\Database\Eloquent\Model
+     * declares this property without a type, and PHP property overrides
+     * must match the parent's type exactly (including "no type").
+     *
      * @var string
      */
     protected $table = 'property_bag';
@@ -16,7 +20,7 @@ class PropertyBag extends Model
     /**
      * The attributes that are mass assignable.
      *
-     * @var array
+     * @var array<int, string>
      */
     protected $fillable = [
         'key',
@@ -26,7 +30,7 @@ class PropertyBag extends Model
     /**
      * The attributes that should be casted to native types.
      *
-     * @var array
+     * @var array<string, string>
      */
     protected $casts = [
         'value' => 'array',

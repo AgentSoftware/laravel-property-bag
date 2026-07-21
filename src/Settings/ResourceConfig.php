@@ -3,27 +3,29 @@
 namespace LaravelPropertyBag\Settings;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
 
 class ResourceConfig
 {
     /**
      * Resource that has settings.
-     *
-     * @var Model
      */
-    private $resource;
+    private Model $resource;
 
     /**
      * Registered settings for model.
      *
-     * @var array
+     * Note: left untyped natively (rather than `array`) because subclasses
+     * generated from src/Stubs/ResourceConfig.php redeclare this property
+     * without a type, and PHP requires matching property types across
+     * inheritance.
+     *
+     * @var array<string, array{allowed: mixed, default: mixed}>
      */
     protected $registeredSettings = [];
 
     /**
      * Construct.
-     *
-     * @param Model $resource
      */
     public function __construct(Model $resource)
     {
@@ -32,10 +34,8 @@ class ResourceConfig
 
     /**
      * Returns resource.
-     *
-     * @return Model
      */
-    public function getResource()
+    public function getResource(): Model
     {
         return $this->resource;
     }
@@ -43,7 +43,11 @@ class ResourceConfig
     /**
      * Return a collection of registered settings.
      *
-     * @return \Illuminate\Support\Collection
+     * Note: no native return type here because tests/Classes/PostConfig.php
+     * overrides this method without one; PHP requires overrides to declare a
+     * compatible return type once the parent declares one.
+     *
+     * @return Collection
      */
     public function registeredSettings()
     {

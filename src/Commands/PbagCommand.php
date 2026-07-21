@@ -9,28 +9,20 @@ class PbagCommand extends Command
 {
     /**
      * Make directory if it doesn't already exist.
-     *
-     * @param string $dir
      */
-    protected function makeDir($dir)
+    protected function makeDir(string $dir): void
     {
         $dirPath = base_path('app/'.ltrim($dir, '/'));
 
-        if (!File::exists($dirPath)) {
+        if (! File::exists($dirPath)) {
             File::makeDirectory($dirPath);
         }
     }
 
     /**
      * Replace mustache with replacement in file.
-     *
-     * @param string $mustache
-     * @param string $replacement
-     * @param string $file
-     *
-     * @return string
      */
-    protected function replace($mustache, $replacement, $file)
+    protected function replace(string $mustache, string $replacement, string $file): string
     {
         return str_replace($mustache, $replacement, $file);
     }

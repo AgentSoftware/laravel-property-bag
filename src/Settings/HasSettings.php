@@ -11,17 +11,13 @@ trait HasSettings
 {
     /**
      * Instance of Settings.
-     *
-     * @var Settings
      */
-    protected $settings = null;
+    protected ?Settings $settings = null;
 
     /**
      * A resource has many settings in a property bag.
-     *
-     * @return MorphMany
      */
-    public function propertyBag()
+    public function propertyBag(): MorphMany
     {
         return $this->morphMany(PropertyBag::resolveModel(), 'resource');
     }
@@ -29,11 +25,8 @@ trait HasSettings
     /**
      * If passed is string, get settings class for the resource or return value
      * for given key. If passed is array, set the key value pair.
-     *
-     * @param  string|array  $passed
-     * @return Settings|mixed
      */
-    public function settings($passed = null)
+    public function settings(string|array|null $passed = null): mixed
     {
         if (is_array($passed)) {
             return $this->setSettings($passed);
@@ -48,10 +41,8 @@ trait HasSettings
 
     /**
      * Get settings off this or create new instance.
-     *
-     * @return Settings
      */
-    protected function getSettingsInstance()
+    protected function getSettingsInstance(): Settings
     {
         if (isset($this->settings)) {
             return $this->settings;
@@ -65,12 +56,9 @@ trait HasSettings
     /**
      * Get the settings class name.
      *
-     *
-     * @return ResourceConfig
-     *
      * @throws ResourceNotFound
      */
-    protected function getSettingsConfig()
+    protected function getSettingsConfig(): ResourceConfig
     {
         if (isset($this->settingsConfig)) {
             $fullNamespace = $this->settingsConfig;
@@ -89,10 +77,8 @@ trait HasSettings
 
     /**
      * Get the short name of the model.
-     *
-     * @return string
      */
-    protected function getShortClassName()
+    protected function getShortClassName(): string
     {
         $reflection = new \ReflectionClass($this);
 
@@ -102,43 +88,39 @@ trait HasSettings
     /**
      * Set settings.
      *
-     *
-     * @return Settings
+     * Note: void, not Settings, because Settings::set() itself returns void
+     * (see its docblock) - matching the pre-existing behaviour rather than
+     * the previous (inaccurate) `@return Settings`.
      */
-    public function setSettings(array $attributes)
+    public function setSettings(array $attributes): void
     {
-        return $this->settings()->set($attributes);
+        $this->settings()->set($attributes);
     }
 
     /**
      * Set all allowed settings by Request.
      *
-     * @return Settings
+     * Note: void, for the same reason as setSettings() above.
      */
-    public function setSettingsByRequest()
+    public function setSettingsByRequest(): void
     {
         $allAllowedSettings = array_keys($this->allSettings()->toArray());
 
-        return $this->settings()->set(request()->only($allAllowedSettings));
+        $this->settings()->set(request()->only($allAllowedSettings));
     }
 
     /**
      * Get all settings.
-     *
-     * @return Collection
      */
-    public function allSettings()
+    public function allSettings(): Collection
     {
         return $this->settings()->all();
     }
 
     /**
      * Get all default settings or default setting for single key if given.
-     *
-     * @param  string  $key
-     * @return Collection|mixed
      */
-    public function defaultSetting($key = null)
+    public function defaultSetting(?string $key = null): mixed
     {
         if (! is_null($key)) {
             return $this->settings()->getDefault($key);
@@ -149,11 +131,8 @@ trait HasSettings
 
     /**
      * Get all allowed settings or allowed settings for single ke if given.
-     *
-     * @param  string  $key
-     * @return Collection
      */
-    public function allowedSetting($key = null)
+    public function allowedSetting(?string $key = null): ?Collection
     {
         if (! is_null($key)) {
             return $this->settings()->getAllowed($key);
@@ -164,12 +143,8 @@ trait HasSettings
 
     /**
      * Get a collection with all users with the given setting and/or value.
-     *
-     * @param  string  $key
-     * @param  mixed  $value
-     * @return Collection
      */
-    public static function withSetting($key, $value = null)
+    public static function withSetting(string $key, mixed $value = null): Collection
     {
         return static::all()->filter(function ($row) use ($key, $value) {
             $setting = $row->settings($key);

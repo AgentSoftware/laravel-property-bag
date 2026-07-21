@@ -23,7 +23,7 @@ class PublishRulesFile extends PbagCommand
     /**
      * Execute the console command.
      */
-    public function handle()
+    public function handle(): void
     {
         $this->makeDir('Settings');
 
@@ -38,10 +38,8 @@ class PublishRulesFile extends PbagCommand
 
     /**
      * Write the settings file into the settings folder.
-     *
-     * @param string $namespace
      */
-    protected function writeRulesFile($namespace)
+    protected function writeRulesFile(string $namespace): void
     {
         $stub = file_get_contents(
             __DIR__.'/../Stubs/Rules.php'

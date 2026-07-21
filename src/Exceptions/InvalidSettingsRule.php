@@ -8,13 +8,8 @@ class InvalidSettingsRule extends Exception
 {
     /**
      * Setting rule method can not be found.
-     *
-     * @param string $rule
-     * @param string $method
-     *
-     * @return static
      */
-    public static function ruleNotFound($rule, $method)
+    public static function ruleNotFound(string $rule, string $method): static
     {
         return new static(
             "Method {$method} for rule {$rule} not found. ".

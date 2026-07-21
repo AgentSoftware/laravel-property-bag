@@ -23,7 +23,7 @@ class PublishSettingsConfig extends PbagCommand
     /**
      * Execute the console command.
      */
-    public function handle()
+    public function handle(): void
     {
         $this->makeDir('Settings');
 
@@ -38,11 +38,8 @@ class PublishSettingsConfig extends PbagCommand
 
     /**
      * Write the settings file into the settings folder.
-     *
-     * @param string $namespace
-     * @param string $resourceName
      */
-    protected function writeConfig($namespace, $resourceName)
+    protected function writeConfig(string $namespace, string $resourceName): void
     {
         $stub = file_get_contents(
             __DIR__.'/../Stubs/ResourceConfig.php'

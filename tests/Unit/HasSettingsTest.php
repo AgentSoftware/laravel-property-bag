@@ -3,23 +3,20 @@
 namespace LaravelPropertyBag\tests\Unit;
 
 use LaravelPropertyBag\tests\TestCase;
+use PHPUnit\Framework\Attributes\Test;
 
 class HasSettingsTest extends TestCase
 {
-    /**
-     * @test
-     */
-    public function if_key_is_given_to_settings_method_value_is_returned()
+    #[Test]
+    public function if_key_is_given_to_settings_method_value_is_returned(): void
     {
         $value = $this->user->settings('test_settings1');
 
         $this->assertEquals('monkey', $value);
     }
 
-    /**
-     * @test
-     */
-    public function if_array_is_given_to_settings_method_value_is_set()
+    #[Test]
+    public function if_array_is_given_to_settings_method_value_is_set(): void
     {
         $settings = [
             'test_settings1' => 'bananas',
@@ -40,10 +37,8 @@ class HasSettingsTest extends TestCase
         ]);
     }
 
-    /**
-     * @test
-     */
-    public function settings_can_be_set_with_from_hassettings()
+    #[Test]
+    public function settings_can_be_set_with_from_hassettings(): void
     {
         $settings = [
             'test_settings1' => 'bananas',
@@ -72,10 +67,8 @@ class HasSettingsTest extends TestCase
         ]);
     }
 
-    /**
-     * @test
-     */
-    public function all_settings_can_be_retrieved_from_hassettings()
+    #[Test]
+    public function all_settings_can_be_retrieved_from_hassettings(): void
     {
         $settings = [
             'test_settings1' => 'bananas',
@@ -92,20 +85,16 @@ class HasSettingsTest extends TestCase
         );
     }
 
-    /**
-     * @test
-     */
-    public function default_setting_can_be_retrieved_from_hassettings()
+    #[Test]
+    public function default_setting_can_be_retrieved_from_hassettings(): void
     {
         $default = $this->user->defaultSetting('test_settings1');
 
         $this->assertEquals('monkey', $default);
     }
 
-    /**
-     * @test
-     */
-    public function all_defaults_can_be_retrieved_from_hassettings()
+    #[Test]
+    public function all_defaults_can_be_retrieved_from_hassettings(): void
     {
         $defaults = $this->user->defaultSetting();
 
@@ -116,20 +105,16 @@ class HasSettingsTest extends TestCase
         ], $defaults->all());
     }
 
-    /**
-     * @test
-     */
-    public function allowed_settings_for_single_key_can_be_retrieved_from_hassettings()
+    #[Test]
+    public function allowed_settings_for_single_key_can_be_retrieved_from_hassettings(): void
     {
         $allowed = $this->user->allowedSetting('test_settings1');
 
         $this->assertEquals(['bananas', 'grapes', 8, 'monkey'], $allowed->all());
     }
 
-    /**
-     * @test
-     */
-    public function all_allowed_values_can_be_retrieved_from_hassettings()
+    #[Test]
+    public function all_allowed_values_can_be_retrieved_from_hassettings(): void
     {
         $allowed = $this->user->allowedSetting();
 
@@ -142,20 +127,16 @@ class HasSettingsTest extends TestCase
         $this->assertEquals($actual, $allowed->all());
     }
 
-    /**
-     * @test
-     */
-    public function all_resources_with_setting_can_be_retrieved_from_hassettings()
+    #[Test]
+    public function all_resources_with_setting_can_be_retrieved_from_hassettings(): void
     {
         $this->assertCount(1, $this->user::withSetting('test_settings1'));
 
         $this->assertCount(0, $this->user::withSetting('test_settings_invalid'));
     }
 
-    /**
-     * @test
-     */
-    public function all_resources_with_setting_and_value_can_be_retrieved_from_hassettings()
+    #[Test]
+    public function all_resources_with_setting_and_value_can_be_retrieved_from_hassettings(): void
     {
         $this->assertCount(1, $this->user::withSetting('test_settings1', 'monkey'));
 

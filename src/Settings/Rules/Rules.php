@@ -6,89 +6,64 @@ class Rules
 {
     /**
      * Return true if value is alpha characters.
-     *
-     * @param  mixed  $value
-     * @return bool
      */
-    public static function ruleAlpha($value)
+    public static function ruleAlpha(mixed $value): bool
     {
         return ctype_alpha((string) $value);
     }
 
     /**
      * Return true for everything.
-     *
-     * @return bool
      */
-    public static function ruleAny()
+    public static function ruleAny(): bool
     {
         return true;
     }
 
     /**
      * Return true if value is alpha characters.
-     *
-     * @param  mixed  $value
-     * @return bool
      */
-    public static function ruleAlphanum($value)
+    public static function ruleAlphanum(mixed $value): bool
     {
         return ctype_alnum((string) $value);
     }
 
     /**
      * Return true if value is alpha characters.
-     *
-     * @param  mixed  $value
-     * @return bool
      */
-    public static function ruleBool($value)
+    public static function ruleBool(mixed $value): bool
     {
         return is_bool($value);
     }
 
     /**
      * Return true if value is integer.
-     *
-     * @param  mixed  $value
-     * @return bool
      */
-    public static function ruleInt($value)
+    public static function ruleInt(mixed $value): bool
     {
         return is_int($value);
     }
 
     /**
      * Return true if value is numeric.
-     *
-     * @param  mixed  $value
-     * @return bool
      */
-    public static function ruleNum($value)
+    public static function ruleNum(mixed $value): bool
     {
         return is_numeric($value);
     }
 
     /**
      * Return true if value is numeric.
-     *
-     * @param  mixed  $value
-     * @param  int  $low
-     * @param  int  $high
-     * @return bool
      */
-    public static function ruleRange($value, $low, $high)
+    public static function ruleRange(mixed $value, int $low, int $high): bool
     {
         return ($low <= $value) && ($value <= $high);
     }
 
     /**
      * Return true if value is a string.
-     *
-     * @param  mixed  $value
-     * @return bool
      */
-    public static function ruleString($value)
+    public static function ruleString(mixed $value): bool
     {
         return is_string($value);
     }

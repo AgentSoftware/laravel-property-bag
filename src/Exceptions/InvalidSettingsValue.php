@@ -8,19 +8,13 @@ class InvalidSettingsValue extends Exception
 {
     /**
      * Failed key name.
-     *
-     * @var string
      */
-    protected $failedKey;
+    protected ?string $failedKey = null;
 
     /**
      * Setting value is not definied in key's allowed values array.
-     *
-     * @param string $key
-     *
-     * @return static
      */
-    public static function settingNotAllowed($key)
+    public static function settingNotAllowed(string $key): static
     {
         $exception = new static(
             "Given value is not a registered allowed value for {$key}."
@@ -31,12 +25,8 @@ class InvalidSettingsValue extends Exception
 
     /**
      * Set failed key name.
-     *
-     * @param string $key
-     *
-     * @return static
      */
-    public function setFailedKey($key)
+    public function setFailedKey(string $key): static
     {
         $this->failedKey = $key;
 
@@ -45,10 +35,8 @@ class InvalidSettingsValue extends Exception
 
     /**
      * Return failed key name.
-     *
-     * @return string
      */
-    public function getFailedKey()
+    public function getFailedKey(): ?string
     {
         return $this->failedKey;
     }
