@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Event;
+use LaravelPropertyBag\Contracts\HasSettings;
 use LaravelPropertyBag\Events\SettingReset;
 use LaravelPropertyBag\Events\SettingUpdated;
 use LaravelPropertyBag\Exceptions\InvalidSettingsValue;
@@ -21,7 +22,7 @@ class Settings
     /**
      * Resource that has settings.
      */
-    protected Model $resource;
+    protected Model&HasSettings $resource;
 
     /**
      * Registered keys, values, and defaults.
@@ -46,7 +47,7 @@ class Settings
     /**
      * Construct.
      */
-    public function __construct(ResourceConfig $settingsConfig, Model $resource)
+    public function __construct(ResourceConfig $settingsConfig, Model&HasSettings $resource)
     {
         $this->settingsConfig = $settingsConfig;
         $this->resource = $resource;
@@ -64,12 +65,6 @@ class Settings
      */
     protected function propertyBag(): MorphMany
     {
-        // $resource is intentionally typed as the generic Eloquent Model so this
-        // package works with any model that uses the HasSettings trait. The trait
-        // guarantees propertyBag() at runtime, but that contract can't be expressed
-        // statically without requiring every consumer model to implement a marker
-        // interface, which is outside this package's control.
-        // @phpstan-ignore method.notFound, return.type
         return $this->resource->propertyBag();
     }
 

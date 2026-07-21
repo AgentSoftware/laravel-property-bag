@@ -3,11 +3,12 @@
 namespace LaravelPropertyBag\tests\Classes;
 
 use Illuminate\Foundation\Auth\User as BaseUser;
-use LaravelPropertyBag\Settings\HasSettings;
+use LaravelPropertyBag\Contracts\HasSettings;
+use LaravelPropertyBag\Settings\HasSettings as HasSettingsTrait;
 
-class User extends BaseUser
+class User extends BaseUser implements HasSettings
 {
-    use HasSettings;
+    use HasSettingsTrait;
 
     /**
      * The table associated with the model.

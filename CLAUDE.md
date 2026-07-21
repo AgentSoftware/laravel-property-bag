@@ -24,6 +24,10 @@ src/
 │   └── NameResolver.php        Resolves the {Model}Settings and Rules class
 │                               names for a resource, honouring the
 │                               `property_bag.namespace` config override.
+├── Contracts/
+│   └── HasSettings.php          Interface pairing the `Settings\HasSettings`
+│                                 trait; declares its stable public API for
+│                                 type-hinting the resource (see Conventions).
 ├── Settings/
 │   ├── HasSettings.php          Trait consumers add to their models; exposes
 │   │                            settings()/setSettings()/allSettings()/etc.
@@ -88,6 +92,25 @@ bundled `PropertyBag` class).
   They are excluded from both Pint (`pint.json`) and PHPStan
   (`phpstan.neon.dist`) for that reason — don't try to "fix" them into valid
   PHP or remove the exclusion.
+- **`Contracts\HasSettings` (interface) pairs with `Settings\HasSettings`
+  (trait).** This is the standard Laravel interface+trait pairing: a
+  consumer model `implements LaravelPropertyBag\Contracts\HasSettings` and
+  `use`s `LaravelPropertyBag\Settings\HasSettings` to satisfy it, giving the
+  package a real contract to type-hint the resource against (e.g. `Settings`
+  types its `$resource` as `Model&HasSettings`) instead of a bare `Model`.
+  Both share the short name `HasSettings` in different namespaces, so a
+  consuming model must alias one import, e.g.:
+  ```php
+  use LaravelPropertyBag\Contracts\HasSettings;
+  use LaravelPropertyBag\Settings\HasSettings as HasSettingsTrait;
+
+  class User extends Model implements HasSettings
+  {
+      use HasSettingsTrait;
+  }
+  ```
+  See `tests/Classes/User.php` (and the other `tests/Classes/*` fixtures) for
+  the pattern in practice.
 - **Prefer Laravel facades over global helper functions in package code**
   (e.g. `App::`/`Config::`/`Validator::` over `app()`/`config()`/
   `validator()`); helpers without a facade equivalent (`collect()`,

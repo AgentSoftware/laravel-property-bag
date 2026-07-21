@@ -3,11 +3,12 @@
 namespace LaravelPropertyBag\tests\Classes;
 
 use Illuminate\Database\Eloquent\Model;
-use LaravelPropertyBag\Settings\HasSettings;
+use LaravelPropertyBag\Contracts\HasSettings;
+use LaravelPropertyBag\Settings\HasSettings as HasSettingsTrait;
 
-class Comment extends Model
+class Comment extends Model implements HasSettings
 {
-    use HasSettings;
+    use HasSettingsTrait;
 
     /**
      * The table associated with the model.
