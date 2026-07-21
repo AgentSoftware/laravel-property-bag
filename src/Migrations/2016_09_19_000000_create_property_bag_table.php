@@ -10,7 +10,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('property_bag', function (Blueprint $table) {
+        Schema::create('property_bag', function (Blueprint $table): void {
             $table->increments('id');
             $table->string('resource_type')->index();
             $table->integer('resource_id')->unsigned()->index();

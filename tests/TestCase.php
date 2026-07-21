@@ -49,7 +49,7 @@ abstract class TestCase extends BaseTestCase
      * @param  Application  $app
      * @return void
      */
-    protected function defineEnvironment($app)
+    protected function defineEnvironment($app): void
     {
         $app['config']->set('database.default', 'sqlite');
 
@@ -64,7 +64,7 @@ abstract class TestCase extends BaseTestCase
      *
      * @return void
      */
-    protected function defineDatabaseMigrations()
+    protected function defineDatabaseMigrations(): void
     {
         $this->loadMigrationsFrom(__DIR__.'/../src/Migrations');
 

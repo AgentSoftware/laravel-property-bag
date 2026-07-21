@@ -229,7 +229,7 @@ class Settings
      */
     public function set(array $attributes): void
     {
-        collect($attributes)->each(function ($value, $key) {
+        collect($attributes)->each(function ($value, $key): void {
             $this->setKeyValue($key, $value);
         });
 

@@ -1,0 +1,33 @@
+# Dev-only harness for running the test suite against real PHP versions in
+# isolated containers. Not referenced by composer.json; has no bearing on the
+# published package. sqlite-only, no database/cache services required.
+x-test: &test
+  working_dir: /app
+  volumes:
+    - .:/app
+  command: >
+    bash -c "
+    apt-get update -qq &&
+    apt-get install -y -qq --no-install-recommends unzip >/dev/null &&
+    curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer &&
+    composer config --unset platform.php &&
+    composer update --prefer-dist --no-interaction &&
+    vendor/bin/phpunit
+    "
+
+services:
+  php82:
+    <<: *test
+    image: php:8.2-cli
+
+  php83:
+    <<: *test
+    image: php:8.3-cli
+
+  php84:
+    <<: *test
+    image: php:8.4-cli
+
+  php85:
+    <<: *test
+    image: php:8.5-cli
