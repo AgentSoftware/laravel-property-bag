@@ -3,11 +3,12 @@
 namespace LaravelPropertyBag\tests\Unit;
 
 use Illuminate\Support\Collection;
-use LaravelPropertyBag\tests\TestCase;
+use LaravelPropertyBag\Exceptions\InvalidSettingsValue;
+use LaravelPropertyBag\Exceptions\ResourceNotFound;
+use LaravelPropertyBag\Settings\ResourceConfig;
 use LaravelPropertyBag\Settings\Settings;
 use LaravelPropertyBag\tests\Classes\User;
-use LaravelPropertyBag\Settings\ResourceConfig;
-use LaravelPropertyBag\Exceptions\InvalidSettingsValue;
+use LaravelPropertyBag\tests\TestCase;
 
 class SettingsTest extends TestCase
 {
@@ -21,12 +22,12 @@ class SettingsTest extends TestCase
 
     /**
      * @test
-     *
-     * @expectedException LaravelPropertyBag\Exceptions\ResourceNotFound
-     * @expectedExceptionMessage Class App\Settings\AdminSettings not found.
      */
     public function exception_is_thrown_when_config_file_not_found()
     {
+        $this->expectException(ResourceNotFound::class);
+        $this->expectExceptionMessage('Class App\Settings\AdminSettings not found.');
+
         $this->makeAdmin()->settings();
     }
 
@@ -171,10 +172,10 @@ class SettingsTest extends TestCase
     {
         $this->user->settings()->set(['test_settings3' => true]);
 
-        $this->seeInDatabase('property_bag', [
-            'resource_id'   => $this->user->id,
+        $this->assertDatabaseHas('property_bag', [
+            'resource_id' => $this->user->id,
             'resource_type' => 'LaravelPropertyBag\tests\Classes\User',
-            'value'         => json_encode('[true]'),
+            'value' => json_encode('[true]'),
         ]);
     }
 
@@ -211,11 +212,11 @@ class SettingsTest extends TestCase
             $settings->allSaved()->all()
         );
 
-        $this->seeInDatabase('property_bag', [
-            'resource_id'   => $this->user->id,
+        $this->assertDatabaseHas('property_bag', [
+            'resource_id' => $this->user->id,
             'resource_type' => 'LaravelPropertyBag\tests\Classes\User',
-            'key'           => 'test_settings1',
-            'value'         => json_encode('["bananas"]'),
+            'key' => 'test_settings1',
+            'value' => json_encode('["bananas"]'),
         ]);
 
         $settings->set(['test_settings1' => 'grapes']);
@@ -225,11 +226,11 @@ class SettingsTest extends TestCase
             $settings->allSaved()->all()
         );
 
-        $this->seeInDatabase('property_bag', [
-            'resource_id'   => $this->user->id,
+        $this->assertDatabaseHas('property_bag', [
+            'resource_id' => $this->user->id,
             'resource_type' => 'LaravelPropertyBag\tests\Classes\User',
-            'key'           => 'test_settings1',
-            'value'         => json_encode('["grapes"]'),
+            'key' => 'test_settings1',
+            'value' => json_encode('["grapes"]'),
         ]);
     }
 
@@ -253,18 +254,18 @@ class SettingsTest extends TestCase
 
         $this->assertEquals($test, $settings->allSaved()->all());
 
-        $this->seeInDatabase('property_bag', [
-            'resource_id'   => $this->user->id,
+        $this->assertDatabaseHas('property_bag', [
+            'resource_id' => $this->user->id,
             'resource_type' => 'LaravelPropertyBag\tests\Classes\User',
-            'key'           => 'test_settings1',
-            'value'         => json_encode('["grapes"]'),
+            'key' => 'test_settings1',
+            'value' => json_encode('["grapes"]'),
         ]);
 
-        $this->seeInDatabase('property_bag', [
-            'resource_id'   => $this->user->id,
+        $this->assertDatabaseHas('property_bag', [
+            'resource_id' => $this->user->id,
             'resource_type' => 'LaravelPropertyBag\tests\Classes\User',
-            'key'           => 'test_settings2',
-            'value'         => json_encode('[false]'),
+            'key' => 'test_settings2',
+            'value' => json_encode('[false]'),
         ]);
     }
 
@@ -361,32 +362,32 @@ class SettingsTest extends TestCase
             'test_settings1' => 'grapes',
         ]);
 
-        $this->seeInDatabase('property_bag', [
+        $this->assertDatabaseHas('property_bag', [
             'resource_id' => $this->user->id,
-            'key'         => 'test_settings1',
-            'value'       => json_encode('["grapes"]'),
+            'key' => 'test_settings1',
+            'value' => json_encode('["grapes"]'),
         ]);
 
         $settings->set([
             'test_settings1' => 'monkey',
         ]);
 
-        $this->dontSeeInDatabase('property_bag', [
-            'resource_id'   => $this->user->id,
+        $this->assertDatabaseMissing('property_bag', [
+            'resource_id' => $this->user->id,
             'resource_type' => 'LaravelPropertyBag\tests\Classes\User',
-            'key'           => 'test_settings1',
-            'value'         => json_encode('["monkey"]'),
+            'key' => 'test_settings1',
+            'value' => json_encode('["monkey"]'),
         ]);
     }
 
     /**
      * @test
-     *
-     * @expectedException LaravelPropertyBag\Exceptions\InvalidSettingsValue
-     * @expectedExceptionMessage Given value is not a registered allowed value for test_settings1.
      */
     public function setting_an_unallowed_setting_value_throws_exception()
     {
+        $this->expectException(InvalidSettingsValue::class);
+        $this->expectExceptionMessage('Given value is not a registered allowed value for test_settings1.');
+
         $this->actingAs($this->user);
 
         $this->user->settings()->set([
@@ -444,15 +445,15 @@ class SettingsTest extends TestCase
         $comment = $this->makeComment();
 
         $settings = [
-            'alpha'    => 'abc',
+            'alpha' => 'abc',
             'alphanum' => 'abc123',
-            'any'      => 45,
-            'bool'     => false,
-            'integer'  => 10,
-            'numeric'  => '87',
-            'range'    => 4,
-            'range2'   => -1,
-            'string'   => 'test',
+            'any' => 45,
+            'bool' => false,
+            'integer' => 10,
+            'numeric' => '87',
+            'range' => 4,
+            'range2' => -1,
+            'string' => 'test',
         ];
 
         $comment->settings()->set($settings);
@@ -465,12 +466,12 @@ class SettingsTest extends TestCase
 
     /**
      * @test
-     *
-     * @expectedException LaravelPropertyBag\Exceptions\InvalidSettingsValue
-     * @expectedExceptionMessage Given value is not a registered allowed value for alpha.
      */
     public function settings_with_invalid_rule_values_can_not_be_set()
     {
+        $this->expectException(InvalidSettingsValue::class);
+        $this->expectExceptionMessage('Given value is not a registered allowed value for alpha.');
+
         $comment = $this->makeComment();
 
         $comment->settings()->set(['alpha' => 4]);
@@ -479,7 +480,7 @@ class SettingsTest extends TestCase
     /**
      * @test
      */
-    public function keyIs_returns_true_if_key_value_is_set()
+    public function key_is_returns_true_if_key_value_is_set()
     {
         $this->actingAs($this->user);
 
@@ -498,7 +499,7 @@ class SettingsTest extends TestCase
     /**
      * @test
      */
-    public function keyIs_returns_false_if_key_value_is_not_set()
+    public function key_is_returns_false_if_key_value_is_not_set()
     {
         $this->actingAs($this->user);
 

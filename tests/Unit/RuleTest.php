@@ -3,8 +3,9 @@
 namespace LaravelPropertyBag\tests\Unit;
 
 use File;
-use LaravelPropertyBag\tests\TestCase;
+use LaravelPropertyBag\Exceptions\InvalidSettingsRule;
 use LaravelPropertyBag\Settings\Rules\RuleValidator;
+use LaravelPropertyBag\tests\TestCase;
 
 class RuleTest extends TestCase
 {
@@ -13,7 +14,7 @@ class RuleTest extends TestCase
      */
     public function rule_validator_can_correctly_identify_rules()
     {
-        $validator = new RuleValidator();
+        $validator = new RuleValidator;
 
         $this->assertEquals('test', $validator->isRule(':test:'));
 
@@ -31,12 +32,12 @@ class RuleTest extends TestCase
 
     /**
      * @test
-     *
-     * @expectedException LaravelPropertyBag\Exceptions\InvalidSettingsRule
-     * @expectedExceptionMessage Method ruleNope for rule nope not found. Check rule spelling or create method ruleNope in Rules.php.
      */
     public function throws_exception_for_rule_not_declared()
     {
+        $this->expectException(InvalidSettingsRule::class);
+        $this->expectExceptionMessage('Method ruleNope for rule nope not found. Check rule spelling or create method ruleNope in Rules.php.');
+
         $this->makeComment()->settings()->isValid('invalid', 'test');
     }
 

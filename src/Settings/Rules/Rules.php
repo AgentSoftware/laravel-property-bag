@@ -7,13 +7,12 @@ class Rules
     /**
      * Return true if value is alpha characters.
      *
-     * @param mixed $value
-     *
+     * @param  mixed  $value
      * @return bool
      */
     public static function ruleAlpha($value)
     {
-        return ctype_alpha($value);
+        return ctype_alpha((string) $value);
     }
 
     /**
@@ -29,20 +28,18 @@ class Rules
     /**
      * Return true if value is alpha characters.
      *
-     * @param mixed $value
-     *
+     * @param  mixed  $value
      * @return bool
      */
     public static function ruleAlphanum($value)
     {
-        return ctype_alnum($value);
+        return ctype_alnum((string) $value);
     }
 
     /**
      * Return true if value is alpha characters.
      *
-     * @param mixed $value
-     *
+     * @param  mixed  $value
      * @return bool
      */
     public static function ruleBool($value)
@@ -53,8 +50,7 @@ class Rules
     /**
      * Return true if value is integer.
      *
-     * @param mixed $value
-     *
+     * @param  mixed  $value
      * @return bool
      */
     public static function ruleInt($value)
@@ -65,8 +61,7 @@ class Rules
     /**
      * Return true if value is numeric.
      *
-     * @param mixed $value
-     *
+     * @param  mixed  $value
      * @return bool
      */
     public static function ruleNum($value)
@@ -77,10 +72,9 @@ class Rules
     /**
      * Return true if value is numeric.
      *
-     * @param mixed $value
-     * @param int   $low
-     * @param int   $high
-     *
+     * @param  mixed  $value
+     * @param  int  $low
+     * @param  int  $high
      * @return bool
      */
     public static function ruleRange($value, $low, $high)
@@ -91,8 +85,7 @@ class Rules
     /**
      * Return true if value is a string.
      *
-     * @param mixed $value
-     *
+     * @param  mixed  $value
      * @return bool
      */
     public static function ruleString($value)

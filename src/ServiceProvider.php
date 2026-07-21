@@ -3,6 +3,8 @@
 namespace LaravelPropertyBag;
 
 use Illuminate\Support\ServiceProvider as BaseProvider;
+use LaravelPropertyBag\Commands\PublishRulesFile;
+use LaravelPropertyBag\Commands\PublishSettingsConfig;
 
 class ServiceProvider extends BaseProvider
 {
@@ -13,7 +15,12 @@ class ServiceProvider extends BaseProvider
      */
     public function register()
     {
-        $this->registerCommands();
+        $this->mergeConfigFrom(__DIR__.'/../config/property_bag.php', 'property_bag');
+
+        $this->commands([
+            PublishSettingsConfig::class,
+            PublishRulesFile::class,
+        ]);
     }
 
     /**
@@ -25,28 +32,10 @@ class ServiceProvider extends BaseProvider
     {
         $this->publishes([
             __DIR__.'/../config/property_bag.php' => config_path('property_bag.php'),
-        ]);
-        
+        ], 'config');
+
         $this->publishes([
             __DIR__.'/Migrations/' => database_path('migrations'),
         ], 'migrations');
-    }
-
-    /**
-     * Register Artisan commands.
-     */
-    protected function registerCommands()
-    {
-        $this->app->singleton('command.pbag.make', function ($app) {
-            return $app['LaravelPropertyBag\Commands\PublishSettingsConfig'];
-        });
-
-        $this->app->singleton('command.pbag.rules', function ($app) {
-            return $app['LaravelPropertyBag\Commands\PublishRulesFile'];
-        });
-
-        $this->commands('command.pbag.make');
-
-        $this->commands('command.pbag.rules');
     }
 }

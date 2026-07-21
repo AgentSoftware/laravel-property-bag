@@ -9,14 +9,14 @@ use ReflectionClass;
 
 class NameResolverTest extends TestCase
 {
-    /** @var string $shortClassName */
+    /** @var string */
     private $shortClassName;
 
-    protected function setUp()
+    protected function setUp(): void
     {
         parent::setUp();
 
-        $reflection = new ReflectionClass(new User());
+        $reflection = new ReflectionClass(new User);
         $this->shortClassName = $reflection->getShortName();
     }
 
@@ -29,7 +29,7 @@ class NameResolverTest extends TestCase
     public function test_can_make_config_filename_if_user_namespace_config_set(): void
     {
         config([
-            'property_bag.namespace' => 'MyApp\\Settings'
+            'property_bag.namespace' => 'MyApp\\Settings',
         ]);
 
         $namespace = NameResolver::makeConfigFileName($this->shortClassName);
@@ -45,7 +45,7 @@ class NameResolverTest extends TestCase
     public function test_can_make_rules_filename_if_user_namespace_config_set(): void
     {
         config([
-            'property_bag.namespace' => 'MyApp\\Settings'
+            'property_bag.namespace' => 'MyApp\\Settings',
         ]);
 
         $namespace = NameResolver::makeRulesFileName();

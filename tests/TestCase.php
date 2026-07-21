@@ -3,18 +3,18 @@
 namespace LaravelPropertyBag\tests;
 
 use Hash;
+use Illuminate\Foundation\Application;
 use LaravelPropertyBag\ServiceProvider;
-use Illuminate\Contracts\Console\Kernel;
+use LaravelPropertyBag\tests\Classes\Admin;
+use LaravelPropertyBag\tests\Classes\Comment;
+use LaravelPropertyBag\tests\Classes\Group;
 use LaravelPropertyBag\tests\Classes\Post;
 use LaravelPropertyBag\tests\Classes\User;
-use LaravelPropertyBag\tests\Classes\Admin;
-use LaravelPropertyBag\tests\Classes\Group;
-use LaravelPropertyBag\tests\Classes\Comment;
-use Laravel\BrowserKitTesting\TestCase as BaseTestCase;
+use LaravelPropertyBag\tests\Migrations\CreateCommentsTable;
+use LaravelPropertyBag\tests\Migrations\CreateGroupsTable;
 use LaravelPropertyBag\tests\Migrations\CreatePostsTable;
 use LaravelPropertyBag\tests\Migrations\CreateUsersTable;
-use LaravelPropertyBag\tests\Migrations\CreateGroupsTable;
-use LaravelPropertyBag\tests\Migrations\CreateCommentsTable;
+use Orchestra\Testbench\TestCase as BaseTestCase;
 
 abstract class TestCase extends BaseTestCase
 {
@@ -26,67 +26,72 @@ abstract class TestCase extends BaseTestCase
     protected $registered;
 
     /**
-     * Creates the application.
+     * The default user under test.
      *
-     * @return \Illuminate\Foundation\Application
+     * @var User
      */
-    public function createApplication()
+    protected $user;
+
+    /**
+     * Get package providers.
+     *
+     * @param  Application  $app
+     * @return array
+     */
+    protected function getPackageProviders($app)
     {
-        $app = require __DIR__.'/../vendor/laravel/laravel/bootstrap/app.php';
+        return [ServiceProvider::class];
+    }
 
-        $app->register(ServiceProvider::class);
+    /**
+     * Define environment setup.
+     *
+     * @param  Application  $app
+     * @return void
+     */
+    protected function defineEnvironment($app)
+    {
+        $app['config']->set('database.default', 'sqlite');
 
-        $app->make(Kernel::class)->bootstrap();
+        $app['config']->set(
+            'database.connections.sqlite.database',
+            ':memory:'
+        );
+    }
 
-        return $app;
+    /**
+     * Define database migrations.
+     *
+     * @return void
+     */
+    protected function defineDatabaseMigrations()
+    {
+        $this->loadMigrationsFrom(__DIR__.'/../src/Migrations');
+
+        (new CreateUsersTable)->up();
+
+        (new CreateGroupsTable)->up();
+
+        (new CreatePostsTable)->up();
+
+        (new CreateCommentsTable)->up();
     }
 
     /**
      * Setup DB and test variables before each test.
      */
-    protected function setUp()
+    protected function setUp(): void
     {
         parent::setUp();
-
-        $this->app['config']->set('database.default', 'sqlite');
-
-        $this->app['config']->set(
-            'database.connections.sqlite.database',
-            ':memory:'
-        );
-
-        $this->migrate();
 
         $this->user = $this->makeUser();
     }
 
     /**
-     * Run migrations.
-     */
-    protected function migrate()
-    {
-        (new CreateUsersTable())->up();
-
-        (new CreateGroupsTable())->up();
-
-        (new CreatePostsTable())->up();
-
-        (new CreateCommentsTable())->up();
-
-        require_once __DIR__.
-            '/../src/Migrations/2016_09_19_000000_create_property_bag_table.php';
-
-        $userSettingsTable = 'CreatePropertyBagTable';
-
-        (new $userSettingsTable())->up();
-    }
-
-    /**
      * Make a user.
      *
-     * @param string $name
-     * @param string $password
-     *
+     * @param  string  $name
+     * @param  string  $password
      * @return User
      */
     protected function makeUser(
@@ -94,8 +99,8 @@ abstract class TestCase extends BaseTestCase
         $email = 'samwilson@example.com'
     ) {
         return User::create([
-            'name'     => $name,
-            'email'    => $email,
+            'name' => $name,
+            'email' => $email,
             'password' => Hash::make('randomstring'),
         ]);
     }
@@ -103,9 +108,8 @@ abstract class TestCase extends BaseTestCase
     /**
      * Make an admin user (should fail to get settings).
      *
-     * @param string $name
-     * @param string $password
-     *
+     * @param  string  $name
+     * @param  string  $password
      * @return Admin
      */
     protected function makeAdmin(
@@ -113,8 +117,8 @@ abstract class TestCase extends BaseTestCase
         $email = 'sallymakerson@example.com'
     ) {
         return Admin::create([
-            'name'     => $name,
-            'email'    => $email,
+            'name' => $name,
+            'email' => $email,
             'password' => Hash::make('randomstring'),
         ]);
     }
@@ -127,8 +131,8 @@ abstract class TestCase extends BaseTestCase
     protected function makeGroup()
     {
         return Group::create([
-            'name'        => 'Laravel User Group',
-            'type'        => 'tech',
+            'name' => 'Laravel User Group',
+            'type' => 'tech',
             'max_members' => 20,
         ]);
     }
@@ -141,8 +145,8 @@ abstract class TestCase extends BaseTestCase
     protected function makePost()
     {
         return Post::create([
-            'title'   => 'Free downloads! Click now!',
-            'body'    => 'Spammy message in terrible English.',
+            'title' => 'Free downloads! Click now!',
+            'body' => 'Spammy message in terrible English.',
             'user_id' => 1,
         ]);
     }
