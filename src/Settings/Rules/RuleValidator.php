@@ -21,8 +21,16 @@ class RuleValidator
         if ($this->userDefinedExists($method)) {
             $class = NameResolver::makeRulesFileName();
 
+            // $method is resolved dynamically from the rule name, so PHPStan cannot
+            // verify the callable shape statically; user-defined rule methods are
+            // documented to return bool, matching this method's contract.
+            // @phpstan-ignore return.type, argument.type
             return call_user_func_array([$class, $method], $arguments);
         } elseif (method_exists(Rules::class, $method)) {
+            // $method is resolved dynamically from the rule name, so PHPStan cannot
+            // verify the callable shape statically; every Rules::rule* method
+            // returns bool, matching this method's contract.
+            // @phpstan-ignore return.type, argument.type
             return call_user_func_array([Rules::class, $method], $arguments);
         }
 
@@ -34,11 +42,13 @@ class RuleValidator
      */
     public function isRule(string $string): bool|string
     {
-        if ($isRule = preg_match('/:(.*?):/', $string, $match)) {
+        $matched = preg_match('/:(.*?):/', $string, $match);
+
+        if ($matched === 1) {
             return $match[1];
         }
 
-        return (bool) $isRule;
+        return (bool) $matched;
     }
 
     /**

@@ -4,6 +4,18 @@ namespace LaravelPropertyBag\Settings;
 
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * Note: $value is annotated as `string`, not the `array` its cast declares, because
+ * Settings::valueToJson() already json_encode()s the value before assignment; the
+ * 'array' cast's own setter then json_encode()s that string again, so reading it
+ * back through the cast (and the manual json_decode() in
+ * Settings::getAllSettingsFlat()) always yields a JSON-encoded string, never an
+ * array. This is a pre-existing behaviour, not something introduced by this typing
+ * pass.
+ *
+ * @property string $key
+ * @property string $value
+ */
 class PropertyBag extends Model
 {
     /**
@@ -13,14 +25,14 @@ class PropertyBag extends Model
      * declares this property without a type, and PHP property overrides
      * must match the parent's type exactly (including "no type").
      *
-     * @var string
+     * @var string|null
      */
     protected $table = 'property_bag';
 
     /**
      * The attributes that are mass assignable.
      *
-     * @var array<int, string>
+     * @var list<string>
      */
     protected $fillable = [
         'key',
@@ -39,9 +51,18 @@ class PropertyBag extends Model
     /**
      * Resolve the model class used to store property bag records, allowing
      * consumers to override the default via the `property_bag.model` config.
+     *
+     * @return class-string<self>
      */
     public static function resolveModel(): string
     {
-        return config('property_bag.model') ?: self::class;
+        $model = config('property_bag.model');
+
+        // config() is statically typed to return mixed; the string return type here
+        // is enforced natively by PHP at runtime, so a misconfigured non-string
+        // value already fails fast with a TypeError rather than being silently
+        // coerced. The truthy check preserves the original `?:` semantics.
+        // @phpstan-ignore return.type, ternary.condNotBoolean
+        return $model ? $model : self::class;
     }
 }

@@ -41,9 +41,7 @@ class PublishRulesFile extends PbagCommand
      */
     protected function writeRulesFile(string $namespace): void
     {
-        $stub = file_get_contents(
-            __DIR__.'/../Stubs/Rules.php'
-        );
+        $stub = $this->readStub(__DIR__.'/../Stubs/Rules.php');
 
         $stub = $this->replace('{{Namespace}}', $namespace, $stub);
 

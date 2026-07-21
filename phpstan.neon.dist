@@ -1,0 +1,18 @@
+parameters:
+    level: max
+    paths:
+        - src
+    excludePaths:
+        - src/Stubs
+    reportUnmatchedIgnoredErrors: true
+
+    # Larastan synthesizes method reflections for Eloquent Builder/Relation-forwarded
+    # calls (where(), first(), get(), etc.) whose isStatic() unconditionally returns
+    # true (see Larastan\Larastan\Reflection\EloquentBuilderMethodReflection). Combined
+    # with phpstan-strict-rules' dynamicCallOnStaticMethod check, every ordinary
+    # `$relation->where(...)->first()` chain is misreported as a "dynamic call to a
+    # static method". This is a known, systemic false positive from combining the two
+    # packages (not specific to this codebase), and strict-rules ships this exact
+    # toggle to disable just that one check.
+    strictRules:
+        dynamicCallOnStaticMethod: false

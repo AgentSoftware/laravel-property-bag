@@ -23,11 +23,15 @@ class Settings
     /**
      * Registered keys, values, and defaults.
      * 'key' => ['allowed' => $value, 'default' => $value].
+     *
+     * @var Collection<string, array{allowed: array<int, mixed>|string, default: mixed}>
      */
     protected Collection $registered;
 
     /**
      * Settings saved in database. Does not include defaults.
+     *
+     * @var Collection<string, mixed>
      */
     protected Collection $settings;
 
@@ -52,9 +56,17 @@ class Settings
 
     /**
      * Get the property bag relationshp off the resource.
+     *
+     * @return MorphMany<PropertyBag, Model>
      */
     protected function propertyBag(): MorphMany
     {
+        // $resource is intentionally typed as the generic Eloquent Model so this
+        // package works with any model that uses the HasSettings trait. The trait
+        // guarantees propertyBag() at runtime, but that contract can't be expressed
+        // statically without requiring every consumer model to implement a marker
+        // interface, which is outside this package's control.
+        // @phpstan-ignore method.notFound, return.type
         return $this->resource->propertyBag();
     }
 
@@ -68,6 +80,8 @@ class Settings
 
     /**
      * Get registered settings.
+     *
+     * @return Collection<string, array{allowed: array<int, mixed>|string, default: mixed}>
      */
     public function getRegistered(): Collection
     {
@@ -93,11 +107,22 @@ class Settings
 
         $allowed = $settings->get('allowed');
 
-        if (! is_array($allowed) &&
-            $rule = $this->ruleValidator->isRule($allowed)) {
-            return $this->ruleValidator->validate($rule, $value);
+        if (! is_array($allowed)) {
+            // $allowed is expected to be a scalar rule descriptor (e.g. ':alpha:')
+            // when it isn't an array; casting mixed to string preserves the
+            // existing behaviour for that case.
+            // @phpstan-ignore cast.string
+            $rule = $this->ruleValidator->isRule((string) $allowed);
+
+            if (is_string($rule)) {
+                return $this->ruleValidator->validate($rule, $value);
+            }
         }
 
+        // $allowed is an array<int, mixed> for valid registeredSettings config. A
+        // malformed 'allowed' value (neither an array nor a rule string) already
+        // fails at runtime here, matching the prior behaviour.
+        // @phpstan-ignore argument.type
         return in_array($value, $allowed, true);
     }
 
@@ -114,15 +139,15 @@ class Settings
      */
     public function getDefault(string $key): mixed
     {
-        if ($this->isRegistered($key)) {
-            return $this->getRegistered()[$key]['default'];
-        }
+        $registered = $this->getRegistered()->get($key);
 
-        return null;
+        return $registered !== null ? $registered['default'] : null;
     }
 
     /**
      * Return all settings used by resource, including defaults.
+     *
+     * @return Collection<string, mixed>
      */
     public function all(): Collection
     {
@@ -139,6 +164,8 @@ class Settings
 
     /**
      * Get all defaults for settings.
+     *
+     * @return Collection<string, mixed>
      */
     public function allDefaults(): Collection
     {
@@ -149,18 +176,30 @@ class Settings
 
     /**
      * Get the allowed settings for key.
+     *
+     * @return Collection<int, mixed>|null
      */
     public function getAllowed(string $key): ?Collection
     {
-        if ($this->isRegistered($key)) {
-            return collect($this->getRegistered()[$key]['allowed']);
+        $registered = $this->getRegistered()->get($key);
+
+        if ($registered === null) {
+            return null;
         }
 
-        return null;
+        $allowed = $registered['allowed'];
+
+        // collect() on a string already wraps it as a single-element array
+        // (Collection::getArrayableItems() falls back to an (array) cast), so this
+        // is behaviourally identical to the previous `collect($allowed)` for both
+        // array and rule-string 'allowed' values.
+        return collect(is_array($allowed) ? $allowed : [$allowed]);
     }
 
     /**
      * Get all allowed values for settings.
+     *
+     * @return Collection<string, array<int, mixed>|string>
      */
     public function allAllowed(): Collection
     {
@@ -171,6 +210,8 @@ class Settings
 
     /**
      * Get all saved settings. Default values are not included in this output.
+     *
+     * @return Collection<string, mixed>
      */
     public function allSaved(): Collection
     {
@@ -183,6 +224,8 @@ class Settings
      * Note: returns void, not static/self, because it returns the result of
      * sync() (also void) - this reflects the pre-existing behaviour rather
      * than the previous docblock's (inaccurate) `@return static`.
+     *
+     * @param  array<string, mixed>  $attributes
      */
     public function set(array $attributes): void
     {
@@ -229,7 +272,9 @@ class Settings
         $this->validateKeyValue($key, $value);
 
         if ($this->isDefault($key, $value) && $this->isSaved($key)) {
-            return $this->deleteRecord($key);
+            $this->deleteRecord($key);
+
+            return null;
         } elseif ($this->isDefault($key, $value)) {
             return null;
         } elseif ($this->isSaved($key)) {
@@ -261,8 +306,11 @@ class Settings
 
     /**
      * Create a new PropertyBag record.
+     *
+     * Note: save() on the relation can return false on failure, matching
+     * Illuminate\Database\Eloquent\Relations\HasOneOrMany::save()'s own contract.
      */
-    protected function createRecord(string $key, mixed $value): PropertyBag
+    protected function createRecord(string $key, mixed $value): PropertyBag|false
     {
         $propertyBagModel = PropertyBag::resolveModel();
 
@@ -279,7 +327,7 @@ class Settings
      */
     protected function updateRecord(string $key, mixed $value): PropertyBag
     {
-        $record = $this->getByKey($key);
+        $record = $this->getRecordOrFail($key);
 
         $record->value = $this->valueToJson($value);
 
@@ -293,7 +341,13 @@ class Settings
      */
     protected function valueToJson(mixed $value): string
     {
-        return json_encode([$value]);
+        $json = json_encode([$value]);
+
+        if ($json === false) {
+            throw new \RuntimeException('Unable to encode setting value as JSON.');
+        }
+
+        return $json;
     }
 
     /**
@@ -301,7 +355,7 @@ class Settings
      */
     protected function deleteRecord(string $key): void
     {
-        $this->getByKey($key)->delete();
+        $this->getRecordOrFail($key)->delete();
     }
 
     /**
@@ -316,6 +370,23 @@ class Settings
     }
 
     /**
+     * Get a property bag record by key, or fail.
+     *
+     * Only called from setKeyValue() after isSaved($key) has confirmed a matching
+     * record exists, so this should never actually throw.
+     */
+    protected function getRecordOrFail(string $key): PropertyBag
+    {
+        $record = $this->getByKey($key);
+
+        if ($record === null) {
+            throw new \RuntimeException("No settings record found for key {$key}.");
+        }
+
+        return $record;
+    }
+
+    /**
      * Load settings from the resource relationship on to this.
      */
     protected function sync(): void
@@ -325,20 +396,33 @@ class Settings
 
     /**
      * Get all settings as a flat collection.
+     *
+     * @return Collection<string, mixed>
      */
     protected function getAllSettingsFlat(): Collection
     {
-        return $this->getAllSettings()->flatMap(function (Model $model) {
+        return $this->getAllSettings()->flatMap(function (PropertyBag $model) {
+            // json_decode() returns mixed by definition, so its offset access can't
+            // be narrowed further without changing the (unrelated) decoding
+            // behaviour.
+            // @phpstan-ignore offsetAccess.nonOffsetAccessible
             return [$model->key => json_decode($model->value)[0]];
         });
     }
 
     /**
      * Retrieve all settings from database.
+     *
+     * @return Collection<int, PropertyBag>
      */
     protected function getAllSettings(): Collection
     {
         if ($this->resource->relationLoaded('propertyBag')) {
+            // The loaded relation is guaranteed to be a Collection<int, PropertyBag>
+            // at runtime since propertyBag() always resolves to a PropertyBag-backed
+            // relation; Model's generic magic property access can't express this
+            // loaded-relation type statically (see propertyBag() above).
+            // @phpstan-ignore property.notFound, return.type
             return $this->resource->propertyBag;
         }
 

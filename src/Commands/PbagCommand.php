@@ -26,4 +26,20 @@ class PbagCommand extends Command
     {
         return str_replace($mustache, $replacement, $file);
     }
+
+    /**
+     * Read a bundled stub file's contents.
+     *
+     * @throws \RuntimeException if the stub file cannot be read.
+     */
+    protected function readStub(string $path): string
+    {
+        $contents = file_get_contents($path);
+
+        if ($contents === false) {
+            throw new \RuntimeException("Unable to read stub file at {$path}.");
+        }
+
+        return $contents;
+    }
 }

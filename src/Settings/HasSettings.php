@@ -2,11 +2,21 @@
 
 namespace LaravelPropertyBag\Settings;
 
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Support\Collection;
 use LaravelPropertyBag\Exceptions\ResourceNotFound;
 use LaravelPropertyBag\Helpers\NameResolver;
 
+/**
+ * Note: this trait is only consumed by application models outside this package
+ * (e.g. tests/Classes/User.php), so PHPStan can't see a concrete class using it
+ * from within src/ and reports the trait itself as unused/unanalysed. The return
+ * types below are still kept precise for the benefit of consumers reading the
+ * trait's docblocks and IDEs resolving them against the host model.
+ *
+ * @phpstan-ignore trait.unused
+ */
 trait HasSettings
 {
     /**
@@ -16,6 +26,8 @@ trait HasSettings
 
     /**
      * A resource has many settings in a property bag.
+     *
+     * @return MorphMany<PropertyBag, Model>
      */
     public function propertyBag(): MorphMany
     {
@@ -111,6 +123,8 @@ trait HasSettings
 
     /**
      * Get all settings.
+     *
+     * @return Collection<string, mixed>
      */
     public function allSettings(): Collection
     {
@@ -131,6 +145,8 @@ trait HasSettings
 
     /**
      * Get all allowed settings or allowed settings for single ke if given.
+     *
+     * @return Collection<int, mixed>|Collection<string, array<int, mixed>|string>|null
      */
     public function allowedSetting(?string $key = null): ?Collection
     {
@@ -143,6 +159,8 @@ trait HasSettings
 
     /**
      * Get a collection with all users with the given setting and/or value.
+     *
+     * @return Collection<int, static>
      */
     public static function withSetting(string $key, mixed $value = null): Collection
     {

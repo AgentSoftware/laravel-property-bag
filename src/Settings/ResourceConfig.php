@@ -20,7 +20,7 @@ class ResourceConfig
      * without a type, and PHP requires matching property types across
      * inheritance.
      *
-     * @var array<string, array{allowed: mixed, default: mixed}>
+     * @var array<string, array{allowed: array<int, mixed>|string, default: mixed}>
      */
     protected $registeredSettings = [];
 
@@ -47,7 +47,7 @@ class ResourceConfig
      * overrides this method without one; PHP requires overrides to declare a
      * compatible return type once the parent declares one.
      *
-     * @return Collection
+     * @return Collection<string, array{allowed: array<int, mixed>|string, default: mixed}>
      */
     public function registeredSettings()
     {

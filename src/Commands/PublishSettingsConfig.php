@@ -29,7 +29,13 @@ class PublishSettingsConfig extends PbagCommand
 
         $namespace = NameResolver::getAppNamespace().'Settings';
 
-        $resourceName = ucfirst($this->argument('resource'));
+        $resource = $this->argument('resource');
+
+        if (! is_string($resource)) {
+            throw new \RuntimeException('The resource argument must be a string.');
+        }
+
+        $resourceName = ucfirst($resource);
 
         $this->writeConfig($namespace, $resourceName);
 
@@ -41,9 +47,7 @@ class PublishSettingsConfig extends PbagCommand
      */
     protected function writeConfig(string $namespace, string $resourceName): void
     {
-        $stub = file_get_contents(
-            __DIR__.'/../Stubs/ResourceConfig.php'
-        );
+        $stub = $this->readStub(__DIR__.'/../Stubs/ResourceConfig.php');
 
         $stub = $this->replace('{{Namespace}}', $namespace, $stub);
 
