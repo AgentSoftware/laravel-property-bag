@@ -1,101 +1,86 @@
 # Laravel Property Bag
-[![Latest Stable Version](https://img.shields.io/packagist/v/zachleigh/laravel-property-bag.svg)](//packagist.org/packages/zachleigh/laravel-property-bag)
-[![License](https://img.shields.io/badge/license-MIT-brightgreen.svg)](//packagist.org/packages/zachleigh/laravel-property-bag)
-[![Build Status](https://img.shields.io/travis/zachleigh/laravel-property-bag/master.svg)](https://travis-ci.org/zachleigh/laravel-property-bag)
-[![Quality Score](https://img.shields.io/scrutinizer/g/zachleigh/laravel-property-bag.svg)](https://scrutinizer-ci.com/g/zachleigh/laravel-property-bag/)
-[![StyleCI](https://styleci.io/repos/60463173/shield?style=flat)](https://styleci.io/repos/60463173)
-[![Total Downloads](https://img.shields.io/packagist/dt/zachleigh/laravel-property-bag.svg)](https://packagist.org/packages/zachleigh/laravel-property-bag)
 
-##### Simple settings for Laravel apps.
-  - Easily give multiple resources settings
-  - Simple to add additional settings as your app grows
-  - Set default settings and limit setting values for security
-  - Fully configurable
+Simple, secure settings for Laravel models, backed by a single `property_bag`
+database table.
+
+- Give any Eloquent model savable settings via one trait.
+- Register allowed values and a default for each setting; invalid values throw
+  an exception instead of silently persisting.
+- Only non-default values are stored in the database, keeping the table small.
+- Validate settings with fixed value lists or built-in/custom rules (`:int:`,
+  `:range=1,10:`, etc.) instead of hardcoding every allowed value.
+
+This is a maintained fork of the archived
+[`zachleigh/laravel-property-bag`](https://github.com/zachleigh/laravel-property-bag)
+(last upstream release `v1.4.1`, January 2020). See the [Attribution](#attribution)
+section below.
 
 ### Contents
-  - [Upgrade Information](#upgrade-information)
-  - [About](#about)
-  - [Install](#install)
+  - [Requirements](#requirements)
+  - [Installation](#installation)
+  - [Publishing config and migrations](#publishing-config-and-migrations)
   - [Usage](#usage)
   - [Methods](#methods)
   - [Validation Rules](#validation-rules)
-  - [Advanced Configuration](#advanced-configuration)
+  - [Configuration](#configuration)
+  - [Artisan Commands](#artisan-commands)
+  - [Running Tests](#running-tests)
   - [Contributing](#contributing)
+  - [Attribution](#attribution)
 
-### Upgrade Information
-##### From 1.3.* to 1.4.0
-1.4.0 drops support for PHP 7.1 and adds support for Laravel 6.
+### Requirements
+  - PHP 8.2+
+  - Laravel 12 or 13
 
-##### From 1.2.* to 1.3.0
-1.3.0 drops support for PHP 7.0.
+### Installation
 
-##### From 1.1.* to 1.2.0
-1.2.0 drops support for PHP 5.6. It will likely still work in older PHP versions, but bugs or issues that focus specifically on 5.6 or lower will no longer be dealt with. Support for PHP 7.2 added.
+`agentsoftware/laravel-property-bag` is distributed **privately** — it is not
+published on Packagist. Point Composer at the GitHub repository directly via a
+`vcs` repository entry in your application's `composer.json`:
 
-##### From 1.0.* to 1.1.0
-1.1.0 adds Lumen support and support for Laravel 5.4 (thanks tzurbaev). There should be no breaking changes. If using Laravel 5.3, please use [Version 1.0.5](https://github.com/zachleigh/laravel-property-bag/tree/v1.0.5):
-```
-composer require zachleigh/laravel-property-bag:1.0.*
-```
-
-##### From 0.9.* to 1.0.0
-Version 1.0.0 brings major changes to the package that make it incompatible with previous versions. The package was essentially rewritten making upgrade from 0.9.7 to 1.0.0 difficult at best.
-
-### About
-Laravel Property Bag gives your application resources savable, secure settings by using a single database property bag table. The benefit of using this kind of settings table, as opposed to say a json blob column on the resource table, is that if in the future you decide to change a setting value, a simple database query can easily take care of it.
-
-### Install
-##### 1. Install through composer
-```
-composer require zachleigh/laravel-property-bag
+```json
+{
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/AgentSoftware/laravel-property-bag"
+        }
+    ]
+}
 ```
 
-#### Laravel Installation
+Then require the package as normal:
 
-##### a. Register the service provider
-In Laravel's config/app.php file, add the service provider to the array with the 'providers' key.
 ```
-LaravelPropertyBag\ServiceProvider::class
+composer require agentsoftware/laravel-property-bag
 ```
 
-##### b. Publish the migration
+The package's service provider (`LaravelPropertyBag\ServiceProvider`) is
+registered automatically via Laravel's package auto-discovery
+(`composer.json`'s `extra.laravel.providers` entry) — there is nothing to add
+to your application's provider list.
+
+### Publishing config and migrations
+
+The package ships a config file and a migration for the `property_bag` table.
+Publish each with its tag:
+
 ```
-php artisan vendor:publish --provider="LaravelPropertyBag\ServiceProvider"
+php artisan vendor:publish --tag=config
+php artisan vendor:publish --tag=migrations
 ```
 
-#### Lumen Installation
+Then run the migration:
 
-##### a. Enable Eloquent
-If you haven't already done so, find and uncomment `$app->withEloquent()` in `app/boostrap.php`.
-
-##### b. Register the service provider
-In Lumen's app/bootstrap.php file, add the service provider:
-```php
-$app->register(LaravelPropertyBag\ServiceProvider::class);
-```
-
-##### c. Copy migration file
-Since Lumen doesn't offer the `php artisan vendor:publish` command, you have to copy the migration file manually from the `vendor/zachleigh/laravel-property-bag/src/Migrations` directory to the `database/migrations` directory.
-
-##### 2. Run the migration
 ```
 php artisan migrate
 ```
 
-##### 3. Create a new settings config file for your resource.
-```
-php artisan pbag:make {resource}
-```
-{resource} should be the name of the model you wish to add settings to. For example:
-```
-php artisan pbag:make User
-```
-This will create a Settings directory containing a UserSettings class where you can configure your settings for the User class.
-
 ### Usage
-##### 1. Use the trait in the model.
+
+##### 1. Add the trait to your model
+
 ```php
-...
 use LaravelPropertyBag\Settings\HasSettings;
 
 class User extends Model
@@ -106,19 +91,34 @@ class User extends Model
 }
 ```
 
-##### 2. Register your settings plus their allowed values and defaults
-After publishing the UserSettings file (hopefully you did this above), register settings in the UserSettings class.
+##### 2. Create a settings config class for the model
+
+```
+php artisan pbag:make User
+```
+
+This creates `app/Settings/UserSettings.php`, a class extending
+`LaravelPropertyBag\Settings\ResourceConfig`. By default the package resolves
+this class as `{App namespace}Settings\{Model}Settings` — e.g.
+`App\Settings\UserSettings` for a `User` model in a standard Laravel app (see
+[Configuration](#configuration) to change the namespace).
+
+##### 3. Register allowed values and defaults
+
 ```php
 protected $registeredSettings = [
     'example_setting' => [
         'allowed' => [true, false],
-        'default' => false
-    ]
+        'default' => false,
+    ],
 ];
 ```
-Each setting must contain an array of allowed values and a default value. It is also possible to use [validation rules](#validation-rules) instead of hardcoding allowed values.
 
-##### 3. Set the setting from the user model
+Each setting must have an array of allowed values (or a [validation
+rule](#validation-rules) string) and a default value.
+
+##### 4. Set values from the model
+
 ```php
 $user->settings(['example_setting' => false]);
 // or
@@ -127,298 +127,282 @@ $user->settings()->set(['example_setting' => false]);
 $user->setSettings(['example_setting' => false]);
 ```
 
-Set multiple values at a time
+Multiple values at once:
+
 ```php
 $user->settings([
     'example_setting' => false,
-    'another_setting' => 'grey'
+    'another_setting' => 'grey',
 ]);
 ```
 
-##### 4. Get the set value from the user model
+Setting a value that isn't in the `allowed` list (or doesn't satisfy its rule)
+throws `LaravelPropertyBag\Exceptions\InvalidSettingsValue`. Use
+`$e->getFailedKey()` to get the name of the setting that failed.
+
+##### 5. Read values from the model
+
 ```php
 $value = $user->settings('example_setting');
 // or
 $value = $user->settings()->get('example_setting');
 ```
-If the value has not been set, the registered default value will be returned. **Note that default values are not stored in the database in order to limit database size.**
+
+If the value has not been explicitly set, the registered default is returned.
+**Default values are never written to the database** — this keeps the table
+small and means changing a default in code instantly applies to every
+resource that hasn't overridden it.
 
 ### Methods
 
-##### get($key)
-Get value for given key.
+All examples below use `$model->settings()`, which returns the
+`LaravelPropertyBag\Settings\Settings` instance for the resource. Most methods
+also have a shortcut directly on the model (via `HasSettings`), shown alongside.
+
+##### `get(string $key): mixed`
+Get the value for a given key, falling back to the registered default.
 ```php
 $value = $model->settings()->get($key);
 ```
 
-##### set($array)
-Set array keys to associated values. Values may be of any type. Returns Settings.
-**When a default value is passed to set(), it will not be stored in the database.** Don't be alarmed if your default values aren't showing up in the table.
-If a value is not registered in the allowed values array, a `LaravelPropertyBag\Exceptions\InvalidSettingsValue` exception will be thrown. You can use the `$e->getFailedKey()` method to retrieve the failed setting name.
+##### `set(array $attributes): void`
+Set one or more key/value pairs. A value equal to its registered default is
+not persisted (and any existing row for it is deleted). Throws
+`InvalidSettingsValue` if a value isn't allowed for its key.
 ```php
-$model->settings()->set([
-  'key1' => 'value1',
-  'key2' => 'value2'
-]);
-
+$model->settings()->set(['key1' => 'value1', 'key2' => 'value2']);
 // or
-
-$model->setSettings([
-  'key1' => 'value1',
-  'key2' => 'value2'
-]);
+$model->setSettings(['key1' => 'value1', 'key2' => 'value2']);
 ```
 
-##### getDefault($key)
-Get default value for given key.
+##### `getDefault(string $key): mixed`
+Get the registered default value for a key.
 ```php
 $default = $model->settings()->getDefault($key);
-
 // or
-
 $default = $model->defaultSetting($key);
 ```
 
-##### allDefaults()
-Get all the default values for registered settings. Returns collection.
+##### `allDefaults(): Collection`
+Get all registered default values, keyed by setting name.
 ```php
 $defaults = $model->settings()->allDefaults();
-
 // or
-
 $defaults = $model->defaultSetting();
 ```
 
-##### getAllowed($key)
-Get allowed values for given key. Returns collection.
+##### `getAllowed(string $key): ?Collection`
+Get the allowed values for a key (`null` if the key isn't registered).
 ```php
 $allowed = $model->settings()->getAllowed($key);
-
 // or
-
 $allowed = $model->allowedSetting($key);
 ```
 
-##### allAllowed()
-Get all allowed values for registered settings. Returns collection.
+##### `allAllowed(): Collection`
+Get the allowed values for every registered setting, keyed by setting name.
 ```php
 $allowed = $model->settings()->allAllowed();
-
 // or
-
 $allowed = $model->allowedSetting();
 ```
 
-##### isDefault($key, $value)
-Return true if given value is the default value for given key.
+##### `isDefault(string $key, mixed $value): bool`
+True if the given value is the default value for the key.
 ```php
 $boolean = $model->settings()->isDefault($key, $value);
 ```
 
-##### isValid($key, $value)
-Return true if given value is allowed for given key.
+##### `isValid(string $key, mixed $value): bool`
+True if the given value is allowed for the key.
 ```php
 $boolean = $model->settings()->isValid($key, $value);
 ```
 
-##### all()
-Return all setting value's for model. Returns collection.
+##### `all(): Collection`
+All settings for the resource, keyed by setting name, with unset settings
+filled in from their defaults.
 ```php
 $allSettings = $model->settings()->all();
-
 // or
-
 $allSettings = $model->allSettings();
 ```
 
-##### keyIs($key, $value)
-Return true if setting for given key equals given value.
-```
+##### `keyIs(string $key, string $value): bool`
+True if the setting for a key equals the given value.
+```php
 $boolean = $model->settings()->keyIs($key, $value);
 ```
 
-##### reset($key)
-Reset key to default value.
-```
+##### `reset(string $key): mixed`
+Reset a key to its default value (deleting any stored row) and return that
+default.
+```php
 $default = $model->settings()->reset($key);
 ```
 
-##### withSetting($key, $value = null)
-Get an array with all stored rows with a given setting and/or value.
-```
+##### `withSetting(string $key, mixed $value = null): Collection` (static)
+Get all rows of the model that have a given setting key set, optionally
+filtered to a specific value.
+```php
 $collection = $model::withSetting($key);
 // or
 $collection = $model::withSetting($key, $value);
 ```
 
 ### Validation Rules
-Rather than hardcoding values in an array, it is also possible to define rules that determine whether a setting value is valid. Rules are always strings and must contain a colon at both the beginning and ending of the string.
+
+Instead of hardcoding an array of allowed values, a setting's `allowed` value
+can be a rule string. Rules are always strings wrapped in colons.
+
 ```php
 'integer' => [
     'allowed' => ':int:',
-    'default' => 7
-]
+    'default' => 7,
+],
 ```
-In this case, the setting value saved for the 'integer' key must be an integer.
 
-Some rules require parameters. Parameters can be passed in the rule definition by using an equal sign and a comma separated list.
+Some rules take parameters, passed after an `=` as a comma-separated list:
+
 ```php
 'range' => [
     'allowed' => ':range=1,5:',
-    'default' => 1
-]
+    'default' => 1,
+],
 ```
 
-#### Available Rules
-##### ':any:'
-Any value will be accepted.
+#### Built-in rules
 
-##### ':alpha:'
-Alphabetic values will be accepted.
+| Rule | Accepts |
+| --- | --- |
+| `:any:` | Any value |
+| `:alpha:` | Alphabetic values |
+| `:alphanum:` | Alphanumeric values |
+| `:bool:` | Boolean values |
+| `:int:` | Integer values |
+| `:num:` | Numeric values |
+| `:range=low,high:` | Numeric values between (inclusive of) `low` and `high` |
+| `:string:` | String values |
 
-##### ':alphanum:'
-Alphanumeric values will be accepted.
+#### User-defined rules
 
-##### ':bool:'
-Boolean values will be accepted.
+Publish the rules stub to `app/Settings/Resources/Rules.php`:
 
-##### ':int:'
-Integer values will be accepted.
-
-##### ':num:'
-Numeric values will be accepted.
-
-##### ':range=low,high:'
-Numeric values falling between or inluding the given low and high parameters will be accpeted. Example:
-```php
-'range' => [
-    'allowed' => ':range=1,10:',
-    'default' => 5
-]
-```
-The numbers 1 to 10 will be allowed.
-
-##### ':string:'
-Strings will be accepted.
-
-#### User Defined Rules
-To make user defined rules, first publish the Rules file to Settings/Resources/Rules.php:
 ```
 php artisan pbag:rules
 ```
-Rule validation methods should be named by prepending 'rule' to the rule name. For example, if our rule is 'example', we would define it in the settings config file like this:
+
+Define a rule by prefixing its name with `rule` and making it `static`:
+
 ```php
 'setting_name' => [
     'allowed' => ':example:',
-    'default' => 'default'
-]
+    'default' => 'default',
+],
 ```
-And then our method would be called 'ruleExample':
+
 ```php
-public static function ruleExample($value)
+public static function ruleExample(mixed $value): bool
 {
-    // do stuff
-    //
-    // return boolean;
+    // return true/false
 }
 ```
-All rule methods should be static and thus should not care about object or application state. If your rule requires parameters, accept them as arguments to the method.
+
+Rule methods that take parameters accept them as extra arguments, in the order
+declared in the rule string:
+
 ```php
 'setting_name' => [
     'allowed' => ':example=arg1,arg2:',
-    'default' => 'default'
-]
+    'default' => 'default',
+],
 ```
 
 ```php
-public static function ruleExample($value, $arg1, $arg2)
+public static function ruleExample(mixed $value, string $arg1, string $arg2): bool
 {
-    // do stuff
-    //
-    // return boolean;
+    // return true/false
 }
 ```
 
-Another option would be to validate input with Laravel's built in validation, which is much more complete than what this package offers, and then set all your setting allowed values to ':any:'.
+### Configuration
 
-### Advanced Configuration
-Laravel Property Bag gives you several ways to configure the package to fit your needs and wants.
+After publishing the config file (`--tag=config`), `config/property_bag.php`
+exposes two keys:
 
-###### I don't want to register settings as an array
-Cool. I get it. Especially if you have dozens of settings, dealing with an array can be annoying. In the model settings config file, add the registeredSettings method.
+##### `namespace`
+Commented out by default. When unset, resource config and rules classes are
+resolved under your application's own namespace, i.e.
+`App\Settings\{Model}Settings` and `App\Settings\Resources\Rules`. Set this to
+resolve them under a different namespace instead, e.g.:
+
 ```php
-/**
- * Return a collection of registered settings.
- *
- * @return Collection
- */
-public function registeredSettings()
-{
-    // Your code
-
-    return $collection;
-}
-```
-In this method, do whatever you want and return a collection of items that has the same structure as the registeredSettings array.
-```php
-'example_setting' => [
-    'allowed' => [true, false],
-    'default' => true
-]
+'namespace' => 'MyApp\\Settings',
 ```
 
-###### I want to use dynamic allowed and default values.
-No problem. Like in the above section, create your own registeredSettings method in the settings config file and return a collection of registered settings.
-```php
-/**
- * Return a collection of registered settings.
- *
- * @return Collection
- */
-public function registeredSettings()
-{
-    $allGroups = Auth::user()->allGroupNames();
+which resolves to `MyApp\Settings\{Model}Settings` and
+`MyApp\Settings\Resources\Rules`.
 
-    return collect([
-        'default_group' => [
-            'allowed' => $allGroups,
-            'default' => $allGroups[0]
-        ]
-    ]);
-}
+##### `model`
+Defaults to `LaravelPropertyBag\Settings\PropertyBag::class`, the package's
+bundled Eloquent model for the `property_bag` table. Set this to your own
+model class (extending `LaravelPropertyBag\Settings\PropertyBag`) to override
+which model is used to read and write property bag rows.
+
+### Artisan Commands
+
+##### `php artisan pbag:make {resource}`
+Creates `app/Settings/{Resource}Settings.php` from the package's
+`ResourceConfig` stub, ready for you to fill in `$registeredSettings`.
+
+##### `php artisan pbag:rules`
+Creates `app/Settings/Resources/Rules.php` for defining
+[user-defined validation rules](#user-defined-rules).
+
+### Running Tests
+
+Locally:
+
 ```
-The allGroupNames function simply returns an array of group names:
-```php
-/**
- * Get array of all group names.
- *
- * @return array
- */
-public function allgroupNames()
-{
-    return $this->groups->pluck('name')->all();
-}
+vendor/bin/phpunit
 ```
 
-You can also access the model the settings are attached to with the `getResource()` method.
-```php
-/**
- * Return a collection of registered settings.
- *
- * @return Collection
- */
-public function registeredSettings()
-{
-    $allGroups = getResource()->allGroupNames();
+`composer.json` pins `config.platform.php` to `8.2`, so a plain
+`composer install`/`update` always resolves the Laravel 12 / Testbench 10
+line, regardless of the PHP interpreter actually running the tests — a local
+`phpunit` run only exercises that line.
 
-    return collect([
-        'default_group' => [
-            'allowed' => $allGroups,
-            'default' => $allGroups[0]
-        ]
-    ]);
-}
+To exercise the full supported matrix (PHP 8.2–8.5 × Laravel 12/13, matching
+`.github/workflows/tests.yml`), use the Docker Compose harness — one service
+per PHP version, each unsetting the platform pin, running `composer update`,
+and running the test suite against a real interpreter:
+
 ```
+docker compose run --rm php82   # PHP 8.2-cli
+docker compose run --rm php83   # PHP 8.3-cli
+docker compose run --rm php84   # PHP 8.4-cli
+docker compose run --rm php85   # PHP 8.5-cli
+```
+
+No database or cache services are required; everything runs against sqlite.
 
 ### Contributing
-Contributions are more than welcome. Fork, improve and make a pull request. For bugs, ideas for improvement or other, please create an [issue](https://github.com/zachleigh/laravel-property-bag/issues).
+
+Contributions are welcome — fork, improve, and open a pull request. Before
+submitting, run the quality gate:
+
+```
+vendor/bin/pint --test
+vendor/bin/phpstan analyse
+vendor/bin/phpunit
+```
+
+Pint (Laravel preset) enforces code style, and PHPStan runs at strict
+`level: max`. For bugs or ideas, open an
+[issue](https://github.com/AgentSoftware/laravel-property-bag/issues).
+
+### Attribution
+
+This package was originally created by [Zach Leigh](https://github.com/zachleigh)
+and is used here under the terms of its MIT license. See [LICENSE](LICENSE)
+for full copyright details.
