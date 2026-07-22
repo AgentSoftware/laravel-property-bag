@@ -1,6 +1,6 @@
 {
     "name": "agentsoftware/laravel-property-bag",
-    "description": "Easy Laravel user settings using a property bag",
+    "description": "Easy Laravel user settings using a property bag (maintained fork of zachleigh/laravel-property-bag)",
     "type": "library",
     "keywords": ["laravel", "user", "settings", "property", "user settings", "property bag"],
     "homepage": "https://github.com/AgentSoftware/laravel-property-bag",
