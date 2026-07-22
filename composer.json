@@ -53,8 +53,26 @@
     },
 
     "scripts": {
+        "test": "phpunit",
         "test:coverage": "phpunit --coverage-text",
-        "test:coverage-html": "phpunit --coverage-html build/coverage"
+        "test:coverage-html": "phpunit --coverage-html build/coverage",
+        "lint": "pint --test",
+        "lint:fix": "pint",
+        "analyse": "phpstan analyse --memory-limit=-1",
+        "check": [
+            "@lint",
+            "@analyse",
+            "@test"
+        ]
+    },
+    "scripts-descriptions": {
+        "test": "Run the PHPUnit test suite.",
+        "test:coverage": "Run the test suite with a text coverage report.",
+        "test:coverage-html": "Run the test suite with an HTML coverage report in build/coverage.",
+        "lint": "Check code style with Pint, without fixing.",
+        "lint:fix": "Fix code style violations with Pint.",
+        "analyse": "Run PHPStan static analysis at level max.",
+        "check": "Run the full local quality gate: lint, analyse, then test."
     },
 
     "minimum-stability": "stable",

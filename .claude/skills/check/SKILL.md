@@ -10,23 +10,37 @@ and `tests`) so you can catch failures before pushing.
 
 ## 1. Local quality gate (current PHP interpreter)
 
-Run these in order, exactly as CI's `code-quality` job does:
+Run the full gate with one composer script, exactly as CI's `code-quality` and
+`tests` jobs do combined:
+
+```bash
+composer check
+```
+
+This runs `lint`, then `analyse`, then `test` in sequence (see
+`composer.json`'s `scripts`/`scripts-descriptions`), stopping at the first
+failure. Each step is also available on its own:
+
+- `composer lint` — style check, configured by `pint.json` (Laravel preset,
+  excludes `src/Stubs`, enforces no unused imports, alphabetised imports,
+  fully qualified strict types, `void` return types). Non-mutating. Use
+  `composer lint:fix` to have Pint fix violations in place.
+- `composer analyse` — static analysis at `level: max`, configured by
+  `phpstan.neon.dist` (analyses `src`, excludes `src/Stubs`), run with
+  `--memory-limit=-1` to avoid an OOM at level max in constrained
+  environments.
+- `composer test` — the test suite, using `phpunit.xml`. `composer
+  test:coverage` / `composer test:coverage-html` add text/HTML coverage
+  reports (require `ext-pcov` or `ext-xdebug`).
+
+The underlying raw commands, if you need to run a tool directly (e.g. with
+extra flags composer scripts don't pass through):
 
 ```bash
 vendor/bin/pint --test
 vendor/bin/phpstan analyse
 vendor/bin/phpunit
 ```
-
-- `vendor/bin/pint --test` — style check, configured by `pint.json` (Laravel preset,
-  excludes `src/Stubs`, enforces no unused imports, alphabetised imports, fully
-  qualified strict types, `void` return types). Drop `--test` to have Pint fix
-  violations in place.
-- `vendor/bin/phpstan analyse` — static analysis at `level: max`, configured by
-  `phpstan.neon.dist` (analyses `src`, excludes `src/Stubs`). CI runs this with
-  `--no-progress`; that flag only suppresses the progress bar for log output and
-  changes no behaviour, so it's optional locally.
-- `vendor/bin/phpunit` — the test suite, using `phpunit.xml`.
 
 ### The platform.php pin only exercises the Laravel 12 line
 

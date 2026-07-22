@@ -173,6 +173,10 @@ commands for their respective tasks:
 
 ## Quality gate
 
+Run `composer check` for the full gate (`lint` → `analyse` → `test`), or
+individually: `composer test`, `composer lint`, `composer lint:fix`,
+`composer analyse`, `composer test:coverage`. These wrap the raw commands:
+
 ```
 vendor/bin/pint --test
 vendor/bin/phpstan analyse
