@@ -70,7 +70,7 @@ jobs:
         with:
           php-version: '8.4'
           extensions: pdo_sqlite, mbstring, dom
-          coverage: none
+          coverage: pcov
 
       - name: Remove platform PHP pin
         run: composer config --unset platform.php
@@ -79,7 +79,13 @@ jobs:
         run: composer install --prefer-dist --no-interaction
 
       - name: Check code style
-        run: vendor/bin/pint --test
+        run: composer lint
 
       - name: Run static analysis
-        run: vendor/bin/phpstan analyse --no-progress
+        run: composer analyse
+
+      - name: Run test suite with coverage
+        run: vendor/bin/phpunit --coverage-clover=coverage.xml --coverage-text
+
+      - name: Enforce coverage floor
+        run: php scripts/coverage-check.php coverage.xml 93
