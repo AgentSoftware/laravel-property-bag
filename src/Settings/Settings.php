@@ -322,22 +322,34 @@ class Settings
      * Create a new PropertyBag record.
      *
      * Note: save() on the relation can return false on failure, matching
-     * Illuminate\Database\Eloquent\Relations\HasOneOrMany::save()'s own contract.
+     * Illuminate\Database\Eloquent\Relations\HasOneOrMany::save()'s own contract;
+     * that failure is thrown here rather than propagated as false so the caller
+     * (and its SettingUpdated dispatch) never has to handle a falsy record.
+     *
+     * @throws \RuntimeException if the record could not be persisted.
      */
-    protected function createRecord(string $key, mixed $value): PropertyBag|false
+    protected function createRecord(string $key, mixed $value): PropertyBag
     {
         $propertyBagModel = PropertyBag::resolveModel();
 
-        return $this->propertyBag()->save(
+        $record = $this->propertyBag()->save(
             new $propertyBagModel([
                 'key' => $key,
                 'value' => $this->valueToJson($value),
             ])
         );
+
+        if ($record === false) {
+            throw new \RuntimeException("Unable to persist new setting record for key {$key}.");
+        }
+
+        return $record;
     }
 
     /**
      * Update a PropertyBag record.
+     *
+     * @throws \RuntimeException if the record could not be persisted.
      */
     protected function updateRecord(string $key, mixed $value): PropertyBag
     {
@@ -345,7 +357,9 @@ class Settings
 
         $record->value = $this->valueToJson($value);
 
-        $record->save();
+        if (! $record->save()) {
+            throw new \RuntimeException("Unable to persist updated setting record for key {$key}.");
+        }
 
         return $record;
     }
@@ -366,10 +380,19 @@ class Settings
 
     /**
      * Delete a PropertyBag record.
+     *
+     * Note: delete() returns bool|null - null when the model didn't exist (not
+     * reachable here, since getRecordOrFail() already confirmed it does), false
+     * when a 'deleting' model event vetoed the delete. Either is treated as
+     * failure.
+     *
+     * @throws \RuntimeException if the record could not be deleted.
      */
     protected function deleteRecord(string $key): void
     {
-        $this->getRecordOrFail($key)->delete();
+        if ($this->getRecordOrFail($key)->delete() !== true) {
+            throw new \RuntimeException("Unable to delete setting record for key {$key}.");
+        }
     }
 
     /**
@@ -411,7 +434,15 @@ class Settings
     /**
      * Get all settings as a flat collection.
      *
+     * Note: JSON_THROW_ON_ERROR makes a genuinely malformed stored value surface
+     * as a \JsonException instead of silently decoding to null. Every value
+     * written by valueToJson() is wrapped as a single-element JSON array (e.g.
+     * "[false]", "[0]", "[null]"), so any legitimately stored value - including
+     * falsy ones - is always valid JSON and decodes unaffected by this flag.
+     *
      * @return Collection<string, mixed>
+     *
+     * @throws \JsonException if a stored value is not valid JSON.
      */
     protected function getAllSettingsFlat(): Collection
     {
@@ -420,7 +451,7 @@ class Settings
             // be narrowed further without changing the (unrelated) decoding
             // behaviour.
             // @phpstan-ignore offsetAccess.nonOffsetAccessible
-            return [$model->key => json_decode($model->value)[0]];
+            return [$model->key => json_decode($model->value, flags: JSON_THROW_ON_ERROR)[0]];
         });
     }
 

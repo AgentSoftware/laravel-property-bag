@@ -10,13 +10,20 @@ class PbagCommand extends Command
 {
     /**
      * Make directory if it doesn't already exist.
+     *
+     * Note: the mkdir() call is @-suppressed so that a failure surfaces as a
+     * false return value we can check below, rather than as the uncaught
+     * \ErrorException Laravel's default error handler would otherwise throw
+     * for the underlying PHP warning.
+     *
+     * @throws \RuntimeException if the directory cannot be created.
      */
     protected function makeDir(string $dir): void
     {
         $dirPath = App::basePath('app/'.ltrim($dir, '/'));
 
-        if (! File::exists($dirPath)) {
-            File::makeDirectory($dirPath);
+        if (! File::exists($dirPath) && ! @File::makeDirectory($dirPath)) {
+            throw new \RuntimeException("Unable to create directory at {$dirPath}.");
         }
     }
 

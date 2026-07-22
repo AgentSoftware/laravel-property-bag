@@ -40,7 +40,11 @@ class PublishSettingsConfig extends PbagCommand
 
         $resourceName = ucfirst($resource);
 
-        $this->writeConfig($namespace, $resourceName);
+        if (! $this->writeConfig($namespace, $resourceName)) {
+            $this->error("Unable to write {$resourceName} settings file.");
+
+            return self::FAILURE;
+        }
 
         $this->info("{$resourceName} settings file successfully created!");
 
@@ -48,9 +52,15 @@ class PublishSettingsConfig extends PbagCommand
     }
 
     /**
-     * Write the settings file into the settings folder.
+     * Write the settings file into the settings folder. Returns true on success,
+     * false if the write failed (e.g. the target directory is not writable).
+     *
+     * Note: the write is @-suppressed so that a failure surfaces as a false
+     * return value we can check, rather than as the uncaught \ErrorException
+     * Laravel's default error handler would otherwise throw for the underlying
+     * PHP warning.
      */
-    protected function writeConfig(string $namespace, string $resourceName): void
+    protected function writeConfig(string $namespace, string $resourceName): bool
     {
         $stub = $this->readStub(__DIR__.'/../Stubs/ResourceConfig.php');
 
@@ -60,9 +70,9 @@ class PublishSettingsConfig extends PbagCommand
 
         $stub = $this->replace('{{ClassName}}', $name, $stub);
 
-        file_put_contents(
+        return @file_put_contents(
             App::basePath("app/Settings/{$name}.php"),
             $stub
-        );
+        ) !== false;
     }
 }

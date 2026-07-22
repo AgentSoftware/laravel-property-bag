@@ -605,4 +605,27 @@ class SettingsTest extends TestCase
         $settings->set(['test_settings1' => 'monkey']);
         $this->assertEquals('monkey', $settings->get('test_settings1'));
     }
+
+    #[Test]
+    public function falsy_stored_values_are_decoded_correctly_and_do_not_throw(): void
+    {
+        $this->user->settings()->set(['test_settings3' => 0]);
+
+        $settings = $this->user->settings();
+
+        $this->assertSame(0, $settings->get('test_settings3'));
+    }
+
+    #[Test]
+    public function malformed_stored_json_throws_json_exception_when_reading_settings(): void
+    {
+        $this->user->propertyBag()->create([
+            'key' => 'test_settings1',
+            'value' => 'not valid json{',
+        ]);
+
+        $this->expectException(\JsonException::class);
+
+        $this->user->settings();
+    }
 }

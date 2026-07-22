@@ -5,6 +5,7 @@ namespace LaravelPropertyBag\tests\Unit;
 use Illuminate\Support\Facades\Event;
 use LaravelPropertyBag\Events\SettingReset;
 use LaravelPropertyBag\Events\SettingUpdated;
+use LaravelPropertyBag\Settings\PropertyBag;
 use LaravelPropertyBag\tests\TestCase;
 use PHPUnit\Framework\Attributes\Test;
 
@@ -78,5 +79,72 @@ class EventTest extends TestCase
         });
 
         Event::assertNotDispatched(SettingUpdated::class);
+    }
+
+    #[Test]
+    public function creating_a_setting_throws_and_does_not_dispatch_event_when_persist_fails(): void
+    {
+        Event::fake([SettingUpdated::class, SettingReset::class]);
+
+        PropertyBag::saving(fn (): bool => false);
+
+        try {
+            $this->user->settings()->set(['test_settings1' => 'bananas']);
+
+            $this->fail('Expected a RuntimeException to be thrown.');
+        } catch (\RuntimeException $e) {
+            // Expected: the failed save() must throw before any event fires.
+        } finally {
+            PropertyBag::flushEventListeners();
+        }
+
+        Event::assertNotDispatched(SettingUpdated::class);
+        Event::assertNotDispatched(SettingReset::class);
+    }
+
+    #[Test]
+    public function updating_a_setting_throws_and_does_not_dispatch_event_when_persist_fails(): void
+    {
+        $this->user->settings()->set(['test_settings1' => 'bananas']);
+
+        Event::fake([SettingUpdated::class, SettingReset::class]);
+
+        PropertyBag::saving(fn (): bool => false);
+
+        try {
+            $this->user->settings()->set(['test_settings1' => 'grapes']);
+
+            $this->fail('Expected a RuntimeException to be thrown.');
+        } catch (\RuntimeException $e) {
+            // Expected: the failed save() must throw before any event fires.
+        } finally {
+            PropertyBag::flushEventListeners();
+        }
+
+        Event::assertNotDispatched(SettingUpdated::class);
+        Event::assertNotDispatched(SettingReset::class);
+    }
+
+    #[Test]
+    public function resetting_a_setting_throws_and_does_not_dispatch_event_when_delete_fails(): void
+    {
+        $this->user->settings()->set(['test_settings1' => 'bananas']);
+
+        Event::fake([SettingUpdated::class, SettingReset::class]);
+
+        PropertyBag::deleting(fn (): bool => false);
+
+        try {
+            $this->user->settings()->reset('test_settings1');
+
+            $this->fail('Expected a RuntimeException to be thrown.');
+        } catch (\RuntimeException $e) {
+            // Expected: the failed delete() must throw before any event fires.
+        } finally {
+            PropertyBag::flushEventListeners();
+        }
+
+        Event::assertNotDispatched(SettingUpdated::class);
+        Event::assertNotDispatched(SettingReset::class);
     }
 }

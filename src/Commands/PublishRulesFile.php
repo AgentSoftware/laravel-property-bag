@@ -24,7 +24,7 @@ class PublishRulesFile extends PbagCommand
     /**
      * Execute the console command.
      */
-    public function handle(): void
+    public function handle(): int
     {
         $this->makeDir('Settings');
 
@@ -32,23 +32,35 @@ class PublishRulesFile extends PbagCommand
 
         $namespace = NameResolver::getAppNamespace().'Settings\\Resources';
 
-        $this->writeRulesFile($namespace);
+        if (! $this->writeRulesFile($namespace)) {
+            $this->error('Unable to write rules file.');
+
+            return self::FAILURE;
+        }
 
         $this->info('Rules file successfully created!');
+
+        return self::SUCCESS;
     }
 
     /**
-     * Write the settings file into the settings folder.
+     * Write the settings file into the settings folder. Returns true on success,
+     * false if the write failed (e.g. the target directory is not writable).
+     *
+     * Note: the write is @-suppressed so that a failure surfaces as a false
+     * return value we can check, rather than as the uncaught \ErrorException
+     * Laravel's default error handler would otherwise throw for the underlying
+     * PHP warning.
      */
-    protected function writeRulesFile(string $namespace): void
+    protected function writeRulesFile(string $namespace): bool
     {
         $stub = $this->readStub(__DIR__.'/../Stubs/Rules.php');
 
         $stub = $this->replace('{{Namespace}}', $namespace, $stub);
 
-        file_put_contents(
+        return @file_put_contents(
             App::basePath('app/Settings/Resources/Rules.php'),
             $stub
-        );
+        ) !== false;
     }
 }
