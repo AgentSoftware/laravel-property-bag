@@ -14,14 +14,8 @@ use LaravelPropertyBag\Settings\Rules\RuleValidator;
 
 class Settings
 {
-    /**
-     * Settings for resource.
-     */
     protected ResourceConfig $settingsConfig;
 
-    /**
-     * Resource that has settings.
-     */
     protected Model&HasSettings $resource;
 
     /**
@@ -39,14 +33,8 @@ class Settings
      */
     protected Collection $settings;
 
-    /**
-     * Validator for allowed rules.
-     */
     protected RuleValidator $ruleValidator;
 
-    /**
-     * Construct.
-     */
     public function __construct(ResourceConfig $settingsConfig, Model&HasSettings $resource)
     {
         $this->settingsConfig = $settingsConfig;
@@ -68,17 +56,12 @@ class Settings
         return $this->resource->propertyBag();
     }
 
-    /**
-     * Get resource config.
-     */
     public function getResourceConfig(): ResourceConfig
     {
         return $this->settingsConfig;
     }
 
     /**
-     * Get registered settings.
-     *
      * @return Collection<string, array{allowed: array<int, mixed>|string, default: mixed}>
      */
     public function getRegistered(): Collection
@@ -319,8 +302,6 @@ class Settings
     }
 
     /**
-     * Create a new PropertyBag record.
-     *
      * Note: save() on the relation can return false on failure, matching
      * Illuminate\Database\Eloquent\Relations\HasOneOrMany::save()'s own contract;
      * that failure is thrown here rather than propagated as false so the caller
@@ -347,8 +328,6 @@ class Settings
     }
 
     /**
-     * Update a PropertyBag record.
-     *
      * @throws \RuntimeException if the record could not be persisted.
      */
     protected function updateRecord(string $key, mixed $value): PropertyBag
@@ -364,9 +343,6 @@ class Settings
         return $record;
     }
 
-    /**
-     * Json encode value.
-     */
     protected function valueToJson(mixed $value): string
     {
         $json = json_encode([$value]);
@@ -379,8 +355,6 @@ class Settings
     }
 
     /**
-     * Delete a PropertyBag record.
-     *
      * Note: delete() returns bool|null - null when the model didn't exist (not
      * reachable here, since getRecordOrFail() already confirmed it does), false
      * when a 'deleting' model event vetoed the delete. Either is treated as
@@ -395,9 +369,6 @@ class Settings
         }
     }
 
-    /**
-     * Get a property bag record by key.
-     */
     protected function getByKey(string $key): ?PropertyBag
     {
         return $this->propertyBag()
@@ -407,8 +378,6 @@ class Settings
     }
 
     /**
-     * Get a property bag record by key, or fail.
-     *
      * Only called from setKeyValue() after isSaved($key) has confirmed a matching
      * record exists, so this should never actually throw.
      */
@@ -432,8 +401,6 @@ class Settings
     }
 
     /**
-     * Get all settings as a flat collection.
-     *
      * Note: JSON_THROW_ON_ERROR makes a genuinely malformed stored value surface
      * as a \JsonException instead of silently decoding to null. Every value
      * written by valueToJson() is wrapped as a single-element JSON array (e.g.
@@ -456,8 +423,6 @@ class Settings
     }
 
     /**
-     * Retrieve all settings from database.
-     *
      * @return Collection<int, PropertyBag>
      */
     protected function getAllSettings(): Collection

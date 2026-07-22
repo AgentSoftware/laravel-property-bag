@@ -42,8 +42,6 @@ interface HasSettings
     public function setSettingsByRequest(): void;
 
     /**
-     * Get all settings.
-     *
      * @return Collection<string, mixed>
      */
     public function allSettings(): Collection;

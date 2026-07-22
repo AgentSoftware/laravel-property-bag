@@ -9,8 +9,6 @@ use Illuminate\Support\Facades\File;
 class PbagCommand extends Command
 {
     /**
-     * Make directory if it doesn't already exist.
-     *
      * Note: the mkdir() call is @-suppressed so that a failure surfaces as a
      * false return value we can check below, rather than as the uncaught
      * \ErrorException Laravel's default error handler would otherwise throw
@@ -27,17 +25,12 @@ class PbagCommand extends Command
         }
     }
 
-    /**
-     * Replace mustache with replacement in file.
-     */
     protected function replace(string $mustache, string $replacement, string $file): string
     {
         return str_replace($mustache, $replacement, $file);
     }
 
     /**
-     * Read a bundled stub file's contents.
-     *
      * @throws \RuntimeException if the stub file cannot be read.
      */
     protected function readStub(string $path): string

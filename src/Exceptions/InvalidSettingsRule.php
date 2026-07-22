@@ -6,9 +6,6 @@ use Exception;
 
 class InvalidSettingsRule extends Exception
 {
-    /**
-     * Setting rule method can not be found.
-     */
     public static function ruleNotFound(string $rule, string $method): static
     {
         // Factory intentionally supports subclassing via the `static` return type;

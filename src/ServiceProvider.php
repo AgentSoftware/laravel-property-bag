@@ -9,9 +9,6 @@ use LaravelPropertyBag\Commands\PublishSettingsConfig;
 
 class ServiceProvider extends BaseProvider
 {
-    /**
-     * Register bindings in the container.
-     */
     public function register(): void
     {
         $this->mergeConfigFrom(__DIR__.'/../config/property_bag.php', 'property_bag');
@@ -22,9 +19,6 @@ class ServiceProvider extends BaseProvider
         ]);
     }
 
-    /**
-     * Register any other events for your application.
-     */
     public function boot(): void
     {
         $this->publishes([

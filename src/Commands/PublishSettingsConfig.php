@@ -8,22 +8,15 @@ use LaravelPropertyBag\Helpers\NameResolver;
 class PublishSettingsConfig extends PbagCommand
 {
     /**
-     * The name and signature of the console command.
-     *
      * @var string
      */
     protected $signature = 'pbag:make {resource}';
 
     /**
-     * The console command description.
-     *
      * @var string
      */
     protected $description = 'Make a settings config file for a resource.';
 
-    /**
-     * Execute the console command.
-     */
     public function handle(): int
     {
         $resource = $this->argument('resource');
@@ -52,9 +45,6 @@ class PublishSettingsConfig extends PbagCommand
     }
 
     /**
-     * Write the settings file into the settings folder. Returns true on success,
-     * false if the write failed (e.g. the target directory is not writable).
-     *
      * Note: the write is @-suppressed so that a failure surfaces as a false
      * return value we can check, rather than as the uncaught \ErrorException
      * Laravel's default error handler would otherwise throw for the underlying

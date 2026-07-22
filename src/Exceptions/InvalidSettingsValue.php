@@ -6,14 +6,8 @@ use Exception;
 
 class InvalidSettingsValue extends Exception
 {
-    /**
-     * Failed key name.
-     */
     protected ?string $failedKey = null;
 
-    /**
-     * Setting value is not definied in key's allowed values array.
-     */
     public static function settingNotAllowed(string $key): static
     {
         // Factory intentionally supports subclassing via the `static` return type;
@@ -27,9 +21,6 @@ class InvalidSettingsValue extends Exception
         return $exception->setFailedKey($key);
     }
 
-    /**
-     * Set failed key name.
-     */
     public function setFailedKey(string $key): static
     {
         $this->failedKey = $key;
@@ -37,9 +28,6 @@ class InvalidSettingsValue extends Exception
         return $this;
     }
 
-    /**
-     * Return failed key name.
-     */
     public function getFailedKey(): ?string
     {
         return $this->failedKey;

@@ -20,8 +20,6 @@ use Illuminate\Support\Facades\Config;
 class PropertyBag extends Model
 {
     /**
-     * The table associated with the model.
-     *
      * Note: left untyped natively - Illuminate\Database\Eloquent\Model
      * declares this property without a type, and PHP property overrides
      * must match the parent's type exactly (including "no type").
@@ -31,8 +29,6 @@ class PropertyBag extends Model
     protected $table = 'property_bag';
 
     /**
-     * The attributes that are mass assignable.
-     *
      * @var list<string>
      */
     protected $fillable = [
@@ -41,8 +37,6 @@ class PropertyBag extends Model
     ];
 
     /**
-     * The attributes that should be casted to native types.
-     *
      * @var array<string, string>
      */
     protected $casts = [

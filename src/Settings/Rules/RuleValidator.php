@@ -8,8 +8,6 @@ use LaravelPropertyBag\Helpers\NameResolver;
 class RuleValidator
 {
     /**
-     * Validate the value given for the rule.
-     *
      * @throws InvalidSettingsRule
      */
     public function validate(string $rule, mixed $value): bool
@@ -51,9 +49,6 @@ class RuleValidator
         return (bool) $matched;
     }
 
-    /**
-     * Make method name used to validate rule.
-     */
     protected function makeRuleMethod(string $rule): string
     {
         if (strpos($rule, '=') !== false) {
@@ -63,9 +58,6 @@ class RuleValidator
         return 'rule'.ucfirst($rule);
     }
 
-    /**
-     * User defined rule method exists.
-     */
     protected function userDefinedExists(string $method): bool
     {
         $userDefined = NameResolver::makeRulesFileName();
@@ -75,8 +67,6 @@ class RuleValidator
     }
 
     /**
-     * Build argument array from rule and value.
-     *
      * @return array<int, mixed>
      */
     protected function buildArgumentArray(string $rule, mixed $value): array

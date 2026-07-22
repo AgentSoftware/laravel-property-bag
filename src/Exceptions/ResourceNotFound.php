@@ -6,9 +6,6 @@ use Exception;
 
 class ResourceNotFound extends Exception
 {
-    /**
-     * Config file for resource can not be found.
-     */
     public static function resourceConfigNotFound(string $namespace): static
     {
         // Factory intentionally supports subclassing via the `static` return type;

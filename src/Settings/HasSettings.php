@@ -20,9 +20,6 @@ use LaravelPropertyBag\Helpers\NameResolver;
  */
 trait HasSettings
 {
-    /**
-     * Instance of Settings.
-     */
     protected ?Settings $settings = null;
 
     /**
@@ -67,8 +64,6 @@ trait HasSettings
     }
 
     /**
-     * Get the settings class name.
-     *
      * @throws ResourceNotFound
      */
     protected function getSettingsConfig(): ResourceConfig
@@ -88,9 +83,6 @@ trait HasSettings
         throw ResourceNotFound::resourceConfigNotFound($fullNamespace);
     }
 
-    /**
-     * Get the short name of the model.
-     */
     protected function getShortClassName(): string
     {
         $reflection = new \ReflectionClass($this);
@@ -99,8 +91,6 @@ trait HasSettings
     }
 
     /**
-     * Set settings.
-     *
      * Note: void, not Settings, because Settings::set() itself returns void
      * (see its docblock) - matching the pre-existing behaviour rather than
      * the previous (inaccurate) `@return Settings`.
@@ -123,8 +113,6 @@ trait HasSettings
     }
 
     /**
-     * Get all settings.
-     *
      * @return Collection<string, mixed>
      */
     public function allSettings(): Collection

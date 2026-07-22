@@ -25,9 +25,6 @@ class NameResolver
         return Config::get('property_bag.namespace');
     }
 
-    /**
-     * Make config file name for resource.
-     */
     public static function makeConfigFileName(string $resourceName): string
     {
         // Truthy check intentionally treats an empty-string config value the same
@@ -43,9 +40,6 @@ class NameResolver
         return $appNamespace.'Settings\\'.$resourceName.'Settings';
     }
 
-    /**
-     * Make rules file name.
-     */
     public static function makeRulesFileName(): string
     {
         // Truthy check intentionally treats an empty-string config value the same
