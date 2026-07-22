@@ -47,7 +47,6 @@ abstract class TestCase extends BaseTestCase
      * Define environment setup.
      *
      * @param  Application  $app
-     * @return void
      */
     protected function defineEnvironment($app): void
     {
@@ -61,8 +60,6 @@ abstract class TestCase extends BaseTestCase
 
     /**
      * Define database migrations.
-     *
-     * @return void
      */
     protected function defineDatabaseMigrations(): void
     {
