@@ -49,6 +49,19 @@ class EventTest extends TestCase
     }
 
     #[Test]
+    public function re_setting_an_existing_setting_to_the_same_value_does_not_dispatch_setting_updated(): void
+    {
+        $this->user->settings()->set(['test_settings1' => 'bananas']);
+
+        Event::fake([SettingUpdated::class, SettingReset::class]);
+
+        $this->user->settings()->set(['test_settings1' => 'bananas']);
+
+        Event::assertNotDispatched(SettingUpdated::class);
+        Event::assertNotDispatched(SettingReset::class);
+    }
+
+    #[Test]
     public function resetting_a_setting_to_default_dispatches_setting_reset(): void
     {
         $this->user->settings()->set(['test_settings1' => 'bananas']);

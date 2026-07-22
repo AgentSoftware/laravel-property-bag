@@ -86,6 +86,16 @@ class CommandTest extends TestCase
     }
 
     #[Test]
+    public function publish_user_command_rejects_an_invalid_resource_argument(): void
+    {
+        $exitCode = Artisan::call('pbag:make', ['resource' => '../../evil']);
+
+        $this->assertNotSame(0, $exitCode);
+
+        $this->assertDirectoryDoesNotExist(app_path('Settings'));
+    }
+
+    #[Test]
     public function publish_rules_file_command_can_be_run_again_when_settings_directories_already_exist(): void
     {
         Artisan::call('pbag:rules');

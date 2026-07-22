@@ -10,7 +10,7 @@ use PHPUnit\Framework\Attributes\Test;
 class PropertyBagModelTest extends TestCase
 {
     #[Test]
-    public function default_property_bag_model_is_used_when_config_is_unset(): void
+    public function default_property_bag_model_is_the_bundled_property_bag_class(): void
     {
         $this->assertEquals(PropertyBag::class, PropertyBag::resolveModel());
 

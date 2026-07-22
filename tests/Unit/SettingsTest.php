@@ -485,6 +485,34 @@ class SettingsTest extends TestCase
     }
 
     #[Test]
+    public function key_is_returns_true_for_a_matching_bool_setting(): void
+    {
+        $this->user->settings()->set(['test_settings2' => false]);
+
+        $this->assertTrue(
+            $this->user->settings()->keyIs('test_settings2', false)
+        );
+
+        $this->assertFalse(
+            $this->user->settings()->keyIs('test_settings2', true)
+        );
+    }
+
+    #[Test]
+    public function key_is_returns_true_for_a_matching_int_setting(): void
+    {
+        $this->user->settings()->set(['test_settings1' => 8]);
+
+        $this->assertTrue(
+            $this->user->settings()->keyIs('test_settings1', 8)
+        );
+
+        $this->assertFalse(
+            $this->user->settings()->keyIs('test_settings1', 'monkey')
+        );
+    }
+
+    #[Test]
     public function reset_resets_setting_to_default_value(): void
     {
         $this->actingAs($this->user);

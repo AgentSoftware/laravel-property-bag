@@ -245,7 +245,7 @@ class Settings
     /**
      * Return true if key is set to value.
      */
-    public function keyIs(string $key, string $value): bool
+    public function keyIs(string $key, mixed $value): bool
     {
         return $this->get($key) === $value;
     }
@@ -284,7 +284,9 @@ class Settings
 
             $record = $this->updateRecord($key, $value);
 
-            Event::dispatch(new SettingUpdated($this->resource, $key, $oldValue, $value, wasCreated: false));
+            if ($oldValue !== $value) {
+                Event::dispatch(new SettingUpdated($this->resource, $key, $oldValue, $value, wasCreated: false));
+            }
 
             return $record;
         }

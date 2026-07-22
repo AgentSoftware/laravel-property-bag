@@ -24,23 +24,27 @@ class PublishSettingsConfig extends PbagCommand
     /**
      * Execute the console command.
      */
-    public function handle(): void
+    public function handle(): int
     {
+        $resource = $this->argument('resource');
+
+        if (! is_string($resource) || preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/', $resource) !== 1) {
+            $this->error('The resource argument must be a valid identifier (letters, numbers, and underscores; not starting with a number).');
+
+            return self::FAILURE;
+        }
+
         $this->makeDir('Settings');
 
         $namespace = NameResolver::getAppNamespace().'Settings';
-
-        $resource = $this->argument('resource');
-
-        if (! is_string($resource)) {
-            throw new \RuntimeException('The resource argument must be a string.');
-        }
 
         $resourceName = ucfirst($resource);
 
         $this->writeConfig($namespace, $resourceName);
 
         $this->info("{$resourceName} settings file successfully created!");
+
+        return self::SUCCESS;
     }
 
     /**

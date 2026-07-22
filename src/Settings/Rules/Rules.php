@@ -10,8 +10,8 @@ class Rules
     public static function ruleAlpha(mixed $value): bool
     {
         // value is a registered setting's raw input, expected to be scalar; casting
-        // mixed to string preserves the existing validation behaviour for numeric/
-        // bool inputs.
+        // mixed to string makes ctype_* operate on the string form of the value
+        // (e.g. an int or bool argument), which is the intended, sane behaviour.
         // @phpstan-ignore cast.string
         return ctype_alpha((string) $value);
     }
@@ -30,8 +30,8 @@ class Rules
     public static function ruleAlphanum(mixed $value): bool
     {
         // value is a registered setting's raw input, expected to be scalar; casting
-        // mixed to string preserves the existing validation behaviour for numeric/
-        // bool inputs.
+        // mixed to string makes ctype_* operate on the string form of the value
+        // (e.g. an int or bool argument), which is the intended, sane behaviour.
         // @phpstan-ignore cast.string
         return ctype_alnum((string) $value);
     }
