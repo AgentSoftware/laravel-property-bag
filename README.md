@@ -25,6 +25,7 @@ section below.
   - [Methods](#methods)
   - [Validation Rules](#validation-rules)
   - [Events](#events)
+  - [Error Handling & Logging](#error-handling--logging)
   - [Configuration](#configuration)
   - [Artisan Commands](#artisan-commands)
   - [Running Tests & Quality Checks](#running-tests--quality-checks)
@@ -207,6 +208,26 @@ class User extends Authenticatable implements HasSettings
 See `tests/Classes/User.php` (and the other `tests/Classes/*` fixtures) for
 the pattern in practice. As of v2.0 the `implements HasSettings` half is
 **required** — see [Upgrading to v2.0](#upgrading-to-v20).
+
+##### The `HasSettings` contract
+
+`LaravelPropertyBag\Contracts\HasSettings` declares the trait's stable public
+API — the methods the package (and your own code) can rely on any
+`HasSettings`-using resource exposing:
+
+| Method | Purpose |
+| --- | --- |
+| `propertyBag(): MorphMany` | The resource's `MorphMany` relation to its `PropertyBag` rows. |
+| `settings(string\|array\|null $passed = null): mixed` | Get the `Settings` instance, read a single value, or set multiple values. |
+| `setSettings(array $attributes): void` | Set one or more key/value pairs. |
+| `setSettingsByRequest(): void` | Set all allowed settings from the current request. |
+| `allSettings(): Collection` | All settings, keyed by name, with unset ones filled in from their defaults. |
+| `defaultSetting(?string $key = null): mixed` | The registered default for a key, or all defaults. |
+| `allowedSetting(?string $key = null): ?Collection` | The allowed values for a key, or all allowed values. |
+| `withSetting(string $key, mixed $value = null): Collection` (static) | All resources with the given setting (and optionally value) set. |
+
+Implementing it isn't optional — see [Upgrading to v2.0](#upgrading-to-v20)
+for why a trait-only model throws a `TypeError` on first settings access.
 
 ##### 3. Set values from the model
 
@@ -453,8 +474,9 @@ throws `LaravelPropertyBag\Exceptions\InvalidSettingsRule`.
 Every call to `Settings::set()` dispatches one domain event per key changed —
 `SettingUpdated` when a value is created or updated, `SettingReset` when a
 value is set back to its default (which deletes the stored row instead of
-writing it). Setting a value that's already equal to the current value (and
-already the default) dispatches nothing.
+writing it). Re-setting a key to the value it already holds — whether that's
+the registered default or a previously-saved value — is a no-op and
+dispatches nothing.
 
 ##### `LaravelPropertyBag\Events\SettingUpdated`
 
@@ -526,6 +548,30 @@ Event::listen(SettingUpdated::class, LogSettingChange::class);
 In tests, use `Event::fake([SettingUpdated::class, SettingReset::class])` and
 `Event::assertDispatched(...)` as usual — see `tests/Unit/EventTest.php` for
 worked examples.
+
+### Error Handling & Logging
+
+The package's philosophy: failures are communicated through exceptions,
+observable state changes through the two [events](#events) above — and it
+does not log anything itself.
+
+##### Exceptions
+
+| Exception | Thrown when |
+| --- | --- |
+| `LaravelPropertyBag\Exceptions\InvalidSettingsValue` | A value passed to `set()`/`settings()` isn't in the setting's `allowed` list and doesn't satisfy its rule. Carries the failed key — see [`getFailedKey()`](#3-set-values-from-the-model). |
+| `LaravelPropertyBag\Exceptions\InvalidSettingsRule` | A setting's `allowed` value references a rule (e.g. `:example:`) with no matching `rule{Name}` method on the user-defined or built-in `Rules` class. |
+| `LaravelPropertyBag\Exceptions\ResourceNotFound` | The resolved `{Model}Settings` config class doesn't exist. |
+| `\RuntimeException` | A property bag row couldn't be created, updated, or deleted (the underlying Eloquent `save()`/`delete()` call returned `false`), or a setting value couldn't be JSON-encoded for storage. |
+| `\JsonException` | A stored `property_bag.value` isn't valid JSON when read back (`Settings` decodes with `JSON_THROW_ON_ERROR`) — i.e. the row was corrupted outside the package. |
+
+##### Logging
+
+`laravel-property-bag` never calls `Log::` (or any logger) itself. To observe
+or log setting changes, listen for [`SettingUpdated` and
+`SettingReset`](#events) (see the example listener above); to log or report
+failures, catch the exceptions above — at the call site or in your
+application's exception handler.
 
 ### Configuration
 
