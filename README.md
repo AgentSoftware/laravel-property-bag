@@ -9,6 +9,7 @@ database table.
 - Only non-default values are stored in the database, keeping the table small.
 - Validate settings with fixed value lists or built-in/custom rules (`:int:`,
   `:range=1,10:`, etc.) instead of hardcoding every allowed value.
+- Listen for `SettingUpdated`/`SettingReset` domain events to react to changes.
 
 This is a maintained fork of the archived
 [`zachleigh/laravel-property-bag`](https://github.com/zachleigh/laravel-property-bag)
@@ -17,20 +18,49 @@ section below.
 
 ### Contents
   - [Requirements](#requirements)
+  - [Upgrading to v2.0](#upgrading-to-v20)
   - [Installation](#installation)
   - [Publishing config and migrations](#publishing-config-and-migrations)
-  - [Usage](#usage)
+  - [Getting Started](#getting-started)
   - [Methods](#methods)
   - [Validation Rules](#validation-rules)
+  - [Events](#events)
   - [Configuration](#configuration)
   - [Artisan Commands](#artisan-commands)
-  - [Running Tests](#running-tests)
+  - [Running Tests & Quality Checks](#running-tests--quality-checks)
   - [Contributing](#contributing)
   - [Attribution](#attribution)
 
 ### Requirements
   - PHP 8.2+
   - Laravel 12 or 13
+
+### Upgrading to v2.0
+
+> **Breaking change.** If you're coming from `v1.x` (including upstream
+> `zachleigh/laravel-property-bag`), read this before upgrading.
+
+- **Every model using the `HasSettings` trait must now also implement
+  `LaravelPropertyBag\Contracts\HasSettings`.** This isn't just a style
+  recommendation — it's enforced at runtime. `Settings::__construct()`
+  type-hints its resource parameter as the native PHP intersection type
+  `Model&HasSettings`:
+
+  ```php
+  public function __construct(ResourceConfig $settingsConfig, Model&HasSettings $resource)
+  ```
+
+  A model that `use`s the trait but doesn't `implements` the interface still
+  satisfies `Model` but not `HasSettings`, so PHP throws a `TypeError` the
+  first time settings are accessed on it (the trait constructs `Settings`
+  lazily — see [Getting Started](#getting-started) for the required
+  trait+interface pairing).
+- **Raised floors:** PHP `^8.2` and Laravel `^12.0||^13.0`. Older PHP/Laravel
+  versions are no longer supported.
+- **New required dependencies:** `illuminate/support`, `illuminate/console`,
+  `illuminate/database`, and `illuminate/container` (`^12.0||^13.0`) are now
+  declared directly in `composer.json` rather than being implicitly supplied
+  by a host application.
 
 ### Installation
 
@@ -76,22 +106,11 @@ Then run the migration:
 php artisan migrate
 ```
 
-### Usage
+### Getting Started
 
-##### 1. Add the trait to your model
+##### 1. Define a settings config class
 
-```php
-use LaravelPropertyBag\Settings\HasSettings;
-
-class User extends Model
-{
-    use HasSettings;
-
-    ...
-}
-```
-
-##### 2. Create a settings config class for the model
+Scaffold one with the [`pbag:make`](#artisan-commands) command:
 
 ```
 php artisan pbag:make User
@@ -103,36 +122,108 @@ this class as `{App namespace}Settings\{Model}Settings` — e.g.
 `App\Settings\UserSettings` for a `User` model in a standard Laravel app (see
 [Configuration](#configuration) to change the namespace).
 
-##### 3. Register allowed values and defaults
+Register each setting's allowed values and default in `$registeredSettings`:
 
 ```php
-protected $registeredSettings = [
-    'example_setting' => [
-        'allowed' => [true, false],
-        'default' => false,
-    ],
-];
+<?php
+
+namespace App\Settings;
+
+use LaravelPropertyBag\Settings\ResourceConfig;
+
+class UserSettings extends ResourceConfig
+{
+    protected $registeredSettings = [
+        'newsletter' => [
+            'allowed' => [true, false],
+            'default' => true,
+        ],
+
+        'theme' => [
+            'allowed' => ['light', 'dark', 'system'],
+            'default' => 'system',
+        ],
+
+        'items_per_page' => [
+            'allowed' => ':range=10,100:',
+            'default' => 25,
+        ],
+    ];
+}
 ```
 
-Each setting must have an array of allowed values (or a [validation
+Each setting needs an array of allowed values (or a [validation
 rule](#validation-rules) string) and a default value.
 
-##### 4. Set values from the model
+If the allowed values or default for a setting can't be hardcoded (e.g. they
+depend on config or another table), override `registeredSettings()` instead of
+declaring the `$registeredSettings` property:
 
 ```php
-$user->settings(['example_setting' => false]);
+<?php
+
+namespace App\Settings;
+
+use LaravelPropertyBag\Settings\ResourceConfig;
+
+class UserSettings extends ResourceConfig
+{
+    public function registeredSettings()
+    {
+        return collect([
+            'locale' => [
+                'allowed' => array_keys(config('app.available_locales')),
+                'default' => config('app.locale'),
+            ],
+        ]);
+    }
+}
+```
+
+##### 2. Wire the model
+
+Add the `LaravelPropertyBag\Settings\HasSettings` trait to the model **and**
+implement `LaravelPropertyBag\Contracts\HasSettings` — the trait and the
+interface deliberately share the short name `HasSettings` (standard
+Laravel trait+contract pairing), so alias one of the imports:
+
+```php
+<?php
+
+namespace App\Models;
+
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use LaravelPropertyBag\Contracts\HasSettings;
+use LaravelPropertyBag\Settings\HasSettings as HasSettingsTrait;
+
+class User extends Authenticatable implements HasSettings
+{
+    use HasSettingsTrait;
+
+    // ...
+}
+```
+
+See `tests/Classes/User.php` (and the other `tests/Classes/*` fixtures) for
+the pattern in practice. As of v2.0 the `implements HasSettings` half is
+**required** — see [Upgrading to v2.0](#upgrading-to-v20).
+
+##### 3. Set values from the model
+
+```php
+$user->settings(['newsletter' => false]);
 // or
-$user->settings()->set(['example_setting' => false]);
+$user->settings()->set(['newsletter' => false]);
 // or
-$user->setSettings(['example_setting' => false]);
+$user->setSettings(['newsletter' => false]);
 ```
 
 Multiple values at once:
 
 ```php
 $user->settings([
-    'example_setting' => false,
-    'another_setting' => 'grey',
+    'newsletter' => false,
+    'theme' => 'dark',
 ]);
 ```
 
@@ -140,18 +231,27 @@ Setting a value that isn't in the `allowed` list (or doesn't satisfy its rule)
 throws `LaravelPropertyBag\Exceptions\InvalidSettingsValue`. Use
 `$e->getFailedKey()` to get the name of the setting that failed.
 
-##### 5. Read values from the model
+##### 4. Read values from the model
 
 ```php
-$value = $user->settings('example_setting');
+$value = $user->settings('newsletter');
 // or
-$value = $user->settings()->get('example_setting');
+$value = $user->settings()->get('newsletter');
 ```
 
 If the value has not been explicitly set, the registered default is returned.
 **Default values are never written to the database** — this keeps the table
 small and means changing a default in code instantly applies to every
 resource that hasn't overridden it.
+
+##### 5. Reset a value to its default
+
+```php
+$default = $user->settings()->reset('newsletter');
+```
+
+This deletes any stored row for the key and returns the (now active) default
+value.
 
 ### Methods
 
@@ -168,7 +268,8 @@ $value = $model->settings()->get($key);
 ##### `set(array $attributes): void`
 Set one or more key/value pairs. A value equal to its registered default is
 not persisted (and any existing row for it is deleted). Throws
-`InvalidSettingsValue` if a value isn't allowed for its key.
+`InvalidSettingsValue` if a value isn't allowed for its key. Dispatches
+[`SettingUpdated` or `SettingReset`](#events) per key changed.
 ```php
 $model->settings()->set(['key1' => 'value1', 'key2' => 'value2']);
 // or
@@ -236,7 +337,7 @@ $boolean = $model->settings()->keyIs($key, $value);
 
 ##### `reset(string $key): mixed`
 Reset a key to its default value (deleting any stored row) and return that
-default.
+default. Dispatches [`SettingReset`](#events).
 ```php
 $default = $model->settings()->reset($key);
 ```
@@ -249,6 +350,19 @@ $collection = $model::withSetting($key);
 // or
 $collection = $model::withSetting($key, $value);
 ```
+
+##### Other `Settings` methods
+
+A few lower-level, introspection-oriented methods are also public on
+`$model->settings()`, without a model-level shortcut:
+
+| Method | Returns |
+| --- | --- |
+| `isRegistered(string $key): bool` | Whether `$key` has an entry in `registeredSettings()`. |
+| `isSaved(string $key): bool` | Whether `$key` has a non-default row persisted in `property_bag`. |
+| `allSaved(): Collection` | Only the persisted (non-default) settings, keyed by name. |
+| `getRegistered(): Collection` | The raw `['allowed' => ..., 'default' => ...]` config for every setting. |
+| `getResourceConfig(): ResourceConfig` | The resource's `{Model}Settings` instance. |
 
 ### Validation Rules
 
@@ -270,6 +384,11 @@ Some rules take parameters, passed after an `=` as a comma-separated list:
     'default' => 1,
 ],
 ```
+
+`RuleValidator` parses the rule string, maps it to a `rule{Name}` method
+(`:range:` → `ruleRange`), and dispatches to it — checking a user-defined
+`Rules` class first, then falling back to the package's own
+`LaravelPropertyBag\Settings\Rules\Rules`.
 
 #### Built-in rules
 
@@ -325,6 +444,89 @@ public static function ruleExample(mixed $value, string $arg1, string $arg2): bo
 }
 ```
 
+If neither the user-defined `Rules` class nor the built-in `Rules` class has a
+matching `rule{Name}` method, `Settings::isValid()` (and therefore `set()`)
+throws `LaravelPropertyBag\Exceptions\InvalidSettingsRule`.
+
+### Events
+
+Every call to `Settings::set()` dispatches one domain event per key changed —
+`SettingUpdated` when a value is created or updated, `SettingReset` when a
+value is set back to its default (which deletes the stored row instead of
+writing it). Setting a value that's already equal to the current value (and
+already the default) dispatches nothing.
+
+##### `LaravelPropertyBag\Events\SettingUpdated`
+
+Dispatched when a non-default value is created or changed.
+
+```php
+public function __construct(
+    public readonly Model $resource,
+    public readonly string $key,
+    public readonly mixed $oldValue,
+    public readonly mixed $newValue,
+    public readonly bool $wasCreated,
+) {}
+```
+
+`$wasCreated` is `true` the first time a key gets a non-default value (no row
+existed before), `false` when an existing row is updated to a new non-default
+value.
+
+##### `LaravelPropertyBag\Events\SettingReset`
+
+Dispatched when a key is set (or [`reset()`](#methods)) back to its default
+value.
+
+```php
+public function __construct(
+    public readonly Model $resource,
+    public readonly string $key,
+    public readonly mixed $oldValue,
+    public readonly mixed $defaultValue,
+) {}
+```
+
+##### Example listener
+
+```php
+<?php
+
+namespace App\Listeners;
+
+use Illuminate\Support\Facades\Log;
+use LaravelPropertyBag\Events\SettingUpdated;
+
+class LogSettingChange
+{
+    public function handle(SettingUpdated $event): void
+    {
+        Log::info("Setting '{$event->key}' changed", [
+            'resource_type' => $event->resource->getMorphClass(),
+            'resource_id' => $event->resource->getKey(),
+            'old_value' => $event->oldValue,
+            'new_value' => $event->newValue,
+            'was_created' => $event->wasCreated,
+        ]);
+    }
+}
+```
+
+Register it in a service provider's `boot()` method:
+
+```php
+use Illuminate\Support\Facades\Event;
+use LaravelPropertyBag\Events\SettingUpdated;
+use App\Listeners\LogSettingChange;
+
+Event::listen(SettingUpdated::class, LogSettingChange::class);
+```
+
+In tests, use `Event::fake([SettingUpdated::class, SettingReset::class])` and
+`Event::assertDispatched(...)` as usual — see `tests/Unit/EventTest.php` for
+worked examples.
+
 ### Configuration
 
 After publishing the config file (`--tag=config`), `config/property_bag.php`
@@ -347,7 +549,26 @@ which resolves to `MyApp\Settings\{Model}Settings` and
 Defaults to `LaravelPropertyBag\Settings\PropertyBag::class`, the package's
 bundled Eloquent model for the `property_bag` table. Set this to your own
 model class (extending `LaravelPropertyBag\Settings\PropertyBag`) to override
-which model is used to read and write property bag rows.
+which model is used to read and write property bag rows — for example, to
+point the table at a different database connection:
+
+```php
+<?php
+
+namespace App\Models;
+
+use LaravelPropertyBag\Settings\PropertyBag;
+
+class TenantPropertyBag extends PropertyBag
+{
+    protected $connection = 'tenant';
+}
+```
+
+```php
+// config/property_bag.php
+'model' => \App\Models\TenantPropertyBag::class,
+```
 
 ### Artisan Commands
 
@@ -359,29 +580,42 @@ Creates `app/Settings/{Resource}Settings.php` from the package's
 Creates `app/Settings/Resources/Rules.php` for defining
 [user-defined validation rules](#user-defined-rules).
 
-### Running Tests
+### Running Tests & Quality Checks
 
-Locally:
+Locally, via the `composer.json` scripts:
 
 ```
-vendor/bin/phpunit
+composer test              # vendor/bin/phpunit
+composer test:coverage     # vendor/bin/phpunit --coverage-text
+composer test:coverage-html # vendor/bin/phpunit --coverage-html build/coverage
+composer lint               # vendor/bin/pint --test (check only)
+composer lint:fix           # vendor/bin/pint (fix in place)
+composer analyse            # vendor/bin/phpstan analyse --memory-limit=-1
+composer check               # lint, then analyse, then test — the full local gate
 ```
 
 `composer.json` pins `config.platform.php` to `8.2`, so a plain
 `composer install`/`update` always resolves the Laravel 12 / Testbench 10
 line, regardless of the PHP interpreter actually running the tests — a local
-`phpunit` run only exercises that line.
+run only exercises that line.
 
 To exercise the full supported matrix (PHP 8.2–8.5 × Laravel 12/13, matching
-`.github/workflows/tests.yml`), use the Docker Compose harness — one service
-per PHP version, each unsetting the platform pin, running `composer update`,
-and running the test suite against a real interpreter:
+`.github/workflows/tests.yml`), use the Docker Compose harness (`compose.yaml`)
+— one service per PHP version, each unsetting the platform pin, running
+`composer update`, and running the test suite against a real interpreter:
 
 ```
 docker compose run --rm php82   # PHP 8.2-cli
 docker compose run --rm php83   # PHP 8.3-cli
 docker compose run --rm php84   # PHP 8.4-cli
 docker compose run --rm php85   # PHP 8.5-cli
+```
+
+There's also a dedicated `coverage` service (PHP 8.4-cli with PCOV installed),
+for hosts without a local coverage driver:
+
+```
+docker compose run --rm coverage
 ```
 
 No database or cache services are required; everything runs against sqlite.
@@ -392,11 +626,11 @@ Contributions are welcome — fork, improve, and open a pull request. Before
 submitting, run the quality gate:
 
 ```
-vendor/bin/pint --test
-vendor/bin/phpstan analyse
-vendor/bin/phpunit
+composer check
 ```
 
+(equivalent to `vendor/bin/pint --test`, `vendor/bin/phpstan analyse`, then
+`vendor/bin/phpunit` — see [Running Tests & Quality Checks](#running-tests--quality-checks)).
 Pint (Laravel preset) enforces code style, and PHPStan runs at strict
 `level: max`. For bugs or ideas, open an
 [issue](https://github.com/AgentSoftware/laravel-property-bag/issues).
