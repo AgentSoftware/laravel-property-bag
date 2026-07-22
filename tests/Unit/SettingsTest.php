@@ -29,6 +29,24 @@ class SettingsTest extends TestCase
     }
 
     #[Test]
+    public function resource_config_is_auto_resolved_from_namespace_when_no_explicit_settings_config_is_set(): void
+    {
+        config(['property_bag.namespace' => 'LaravelPropertyBag\tests\Classes']);
+
+        $admin = $this->makeAdmin();
+
+        $settings = $admin->settings();
+
+        $this->assertInstanceOf(Settings::class, $settings);
+
+        $this->assertEquals(['bananas', 'grapes', 8, 'monkey'], $settings->getAllowed('test_settings1')->all());
+
+        $admin->settings(['test_settings1' => 'bananas']);
+
+        $this->assertEquals('bananas', $admin->settings('test_settings1'));
+    }
+
+    #[Test]
     public function settings_class_has_registered_settings(): void
     {
         $registered = $this->user->settings()->getRegistered();
@@ -136,6 +154,18 @@ class SettingsTest extends TestCase
         $allowed = $this->user->settings()->allAllowed()->flatten();
 
         $this->assertCount(14, $allowed);
+    }
+
+    #[Test]
+    public function getting_the_allowed_values_for_an_unregistered_key_returns_null(): void
+    {
+        $this->assertNull($this->user->settings()->getAllowed('not_a_registered_setting'));
+    }
+
+    #[Test]
+    public function getting_the_default_value_for_an_unregistered_key_returns_null(): void
+    {
+        $this->assertNull($this->user->settings()->getDefault('not_a_registered_setting'));
     }
 
     #[Test]

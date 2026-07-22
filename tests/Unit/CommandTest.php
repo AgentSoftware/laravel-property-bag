@@ -56,4 +56,46 @@ class CommandTest extends TestCase
 
         File::deleteDirectory(app_path('Settings'));
     }
+
+    #[Test]
+    public function publish_user_command_can_be_run_again_when_settings_directory_already_exists(): void
+    {
+        Artisan::call('pbag:make', ['resource' => 'User']);
+
+        $this->assertFileExists(app_path('Settings'));
+
+        Artisan::call('pbag:make', ['resource' => 'User']);
+
+        $this->assertFileExists(app_path('Settings/UserSettings.php'));
+
+        File::deleteDirectory(app_path('Settings'));
+    }
+
+    #[Test]
+    public function publish_user_command_capitalizes_a_lowercase_resource_argument(): void
+    {
+        Artisan::call('pbag:make', ['resource' => 'post']);
+
+        $this->assertFileExists(app_path('Settings/PostSettings.php'));
+
+        $file = file_get_contents(app_path('Settings/PostSettings.php'));
+
+        $this->assertTrue(strrpos($file, 'class PostSettings') !== false);
+
+        File::deleteDirectory(app_path('Settings'));
+    }
+
+    #[Test]
+    public function publish_rules_file_command_can_be_run_again_when_settings_directories_already_exist(): void
+    {
+        Artisan::call('pbag:rules');
+
+        $this->assertFileExists(app_path('Settings/Resources'));
+
+        Artisan::call('pbag:rules');
+
+        $this->assertFileExists(app_path('Settings/Resources/Rules.php'));
+
+        File::deleteDirectory(app_path('Settings'));
+    }
 }

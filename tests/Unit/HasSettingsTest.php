@@ -68,6 +68,23 @@ class HasSettingsTest extends TestCase
     }
 
     #[Test]
+    public function settings_can_be_set_from_the_current_request_with_hassettings(): void
+    {
+        $this->app['request']->merge([
+            'test_settings1' => 'bananas',
+            'test_settings2' => false,
+            'not_a_registered_setting' => 'ignored',
+        ]);
+
+        $this->user->setSettingsByRequest();
+
+        $this->assertEquals(
+            ['test_settings1' => 'bananas', 'test_settings2' => false],
+            $this->user->settings()->allSaved()->all()
+        );
+    }
+
+    #[Test]
     public function all_settings_can_be_retrieved_from_hassettings(): void
     {
         $settings = [
