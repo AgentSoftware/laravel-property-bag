@@ -36,6 +36,10 @@
         "phpstan/phpstan-strict-rules": "^2"
     },
 
+    "suggest": {
+        "ext-pcov": "Enables fast code-coverage generation (composer test:coverage). Not required to install/run the suite; use the Dockerfile/compose.yaml dev harness if it's unavailable on your host."
+    },
+
     "autoload": {
         "psr-4": {
             "LaravelPropertyBag\\": "src/"
@@ -46,6 +50,11 @@
         "psr-4": {
             "LaravelPropertyBag\\tests\\": "tests/"
         }
+    },
+
+    "scripts": {
+        "test:coverage": "phpunit --coverage-text",
+        "test:coverage-html": "phpunit --coverage-html build/coverage"
     },
 
     "minimum-stability": "stable",

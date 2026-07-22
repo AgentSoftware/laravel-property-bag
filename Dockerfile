@@ -11,6 +11,16 @@ RUN apt-get update \
 
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
+# PCOV gives fast code-coverage generation (vendor/bin/phpunit --coverage-*).
+# $PHPIZE_DEPS is purged again after the extension is built so the image
+# stays lean.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends $PHPIZE_DEPS \
+    && pecl install pcov \
+    && docker-php-ext-enable pcov \
+    && apt-get purge -y --auto-remove $PHPIZE_DEPS \
+    && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 
 CMD ["composer", "--version"]

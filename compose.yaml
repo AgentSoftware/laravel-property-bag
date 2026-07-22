@@ -31,3 +31,20 @@ services:
   php85:
     <<: *test
     image: php:8.5-cli
+
+  # Dedicated coverage leg: installs PCOV (not needed by the plain matrix
+  # legs above) and runs the suite with --coverage-text. Use this when your
+  # host has no coverage driver, e.g. `docker compose run --rm coverage`.
+  coverage:
+    <<: *test
+    image: php:8.4-cli
+    command: >
+      bash -c "
+      apt-get update -qq &&
+      apt-get install -y -qq --no-install-recommends unzip $$PHPIZE_DEPS >/dev/null &&
+      pecl install pcov >/dev/null &&
+      docker-php-ext-enable pcov &&
+      curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer &&
+      composer update --prefer-dist --no-interaction &&
+      vendor/bin/phpunit --coverage-text
+      "

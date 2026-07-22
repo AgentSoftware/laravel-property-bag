@@ -5,6 +5,7 @@ composer.lock
 .phpunit.cache
 /build
 /coverage
+coverage.xml
 .DS_Store
 .idea
 .vscode
