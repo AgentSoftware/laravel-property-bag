@@ -3,14 +3,14 @@
 namespace LaravelPropertyBag\tests\Unit;
 
 use File;
-use LaravelPropertyBag\tests\TestCase;
+use LaravelPropertyBag\Exceptions\InvalidSettingsRule;
 use LaravelPropertyBag\Settings\Rules\RuleValidator;
+use LaravelPropertyBag\tests\TestCase;
+use PHPUnit\Framework\Attributes\Test;
 
 class RuleTest extends TestCase
 {
-    /**
-     * @test
-     */
+    #[Test]
     public function rule_validator_can_correctly_identify_rules()
     {
         $validator = new RuleValidator();
@@ -29,20 +29,16 @@ class RuleTest extends TestCase
         $this->assertFalse($validator->isRule('test:'));
     }
 
-    /**
-     * @test
-     *
-     * @expectedException LaravelPropertyBag\Exceptions\InvalidSettingsRule
-     * @expectedExceptionMessage Method ruleNope for rule nope not found. Check rule spelling or create method ruleNope in Rules.php.
-     */
+    #[Test]
     public function throws_exception_for_rule_not_declared()
     {
+        $this->expectException(InvalidSettingsRule::class);
+        $this->expectExceptionMessage('Method ruleNope for rule nope not found. Check rule spelling or create method ruleNope in Rules.php.');
+
         $this->makeComment()->settings()->isValid('invalid', 'test');
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function any_rule_returns_true_for_any()
     {
         $this->assertTrue(
@@ -50,9 +46,7 @@ class RuleTest extends TestCase
         );
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function alpha_rule_returns_true_for_alpha()
     {
         $this->assertTrue(
@@ -60,9 +54,7 @@ class RuleTest extends TestCase
         );
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function alpha_rule_returns_false_for_non_alpha()
     {
         $this->assertFalse(
@@ -70,9 +62,7 @@ class RuleTest extends TestCase
         );
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function alphanum_rule_returns_true_for_alphanum()
     {
         $this->assertTrue(
@@ -80,9 +70,7 @@ class RuleTest extends TestCase
         );
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function alphanum_rule_returns_false_for_non_alphanum()
     {
         $this->assertFalse(
@@ -90,9 +78,7 @@ class RuleTest extends TestCase
         );
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function bool_rule_returns_true_for_bool()
     {
         $this->assertTrue(
@@ -100,9 +86,7 @@ class RuleTest extends TestCase
         );
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function bool_rule_returns_false_for_non_bool()
     {
         $this->assertFalse(
@@ -110,9 +94,7 @@ class RuleTest extends TestCase
         );
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function integer_rule_returns_true_for_integer()
     {
         $this->assertTrue(
@@ -120,9 +102,7 @@ class RuleTest extends TestCase
         );
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function integer_rule_returns_false_for_non_integer()
     {
         $this->assertFalse(
@@ -130,9 +110,7 @@ class RuleTest extends TestCase
         );
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function numeric_rule_returns_true_for_numeric()
     {
         $this->assertTrue(
@@ -140,9 +118,7 @@ class RuleTest extends TestCase
         );
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function numeric_rule_returns_false_for_non_numeric()
     {
         $this->assertFalse(
@@ -150,9 +126,7 @@ class RuleTest extends TestCase
         );
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function range_rule_returns_true_for_value_in_range()
     {
         $this->assertTrue(
@@ -160,9 +134,7 @@ class RuleTest extends TestCase
         );
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function range_rule_returns_true_for_value_at_low_end()
     {
         $this->assertTrue(
@@ -170,9 +142,7 @@ class RuleTest extends TestCase
         );
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function range_rule_returns_true_for_value_at_high_end()
     {
         $this->assertTrue(
@@ -180,9 +150,7 @@ class RuleTest extends TestCase
         );
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function range_rule_returns_false_for_value_out_of_range()
     {
         $this->assertFalse(
@@ -190,9 +158,7 @@ class RuleTest extends TestCase
         );
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function range_rule_handles_negative_numbers()
     {
         $comment = $this->makeComment();
@@ -206,9 +172,7 @@ class RuleTest extends TestCase
         );
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function string_rule_returns_true_for_string()
     {
         $this->assertTrue(
@@ -216,9 +180,7 @@ class RuleTest extends TestCase
         );
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function string_rule_returns_false_for_non_string()
     {
         $this->assertFalse(
@@ -226,9 +188,7 @@ class RuleTest extends TestCase
         );
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function rules_can_be_user_defined()
     {
         File::makeDirectory(app_path('Settings'));

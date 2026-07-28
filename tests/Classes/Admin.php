@@ -2,7 +2,7 @@
 
 namespace LaravelPropertyBag\tests\Classes;
 
-use App\User as BaseUser;
+use Illuminate\Foundation\Auth\User as BaseUser;
 use LaravelPropertyBag\Settings\HasSettings;
 
 class Admin extends BaseUser
@@ -15,4 +15,15 @@ class Admin extends BaseUser
      * @var string
      */
     protected $table = 'users';
+
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array
+     */
+    protected $fillable = [
+        'name',
+        'email',
+        'password',
+    ];
 }

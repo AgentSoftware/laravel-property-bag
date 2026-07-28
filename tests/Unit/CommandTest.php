@@ -2,18 +2,17 @@
 
 namespace LaravelPropertyBag\tests\Unit;
 
-use File;
 use Artisan;
+use File;
 use LaravelPropertyBag\tests\TestCase;
+use PHPUnit\Framework\Attributes\Test;
 
 class CommandTest extends TestCase
 {
-    /**
-     * @test
-     */
+    #[Test]
     public function publish_user_command_creates_settings_file()
     {
-        $this->assertFileNotExists(app_path('Settings/UserSettings.php'));
+        $this->assertFileDoesNotExist(app_path('Settings/UserSettings.php'));
 
         Artisan::call('pbag:make', ['resource' => 'User']);
 
@@ -22,9 +21,7 @@ class CommandTest extends TestCase
         File::deleteDirectory(app_path('Settings'));
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function published_settings_file_has_correct_namespace()
     {
         Artisan::call('pbag:make', ['resource' => 'User']);
@@ -36,9 +33,7 @@ class CommandTest extends TestCase
         File::deleteDirectory(app_path('Settings'));
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function published_settings_file_has_correct_name()
     {
         Artisan::call('pbag:make', ['resource' => 'User']);
@@ -50,12 +45,10 @@ class CommandTest extends TestCase
         File::deleteDirectory(app_path('Settings'));
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function publish_rules_file_creates_rules_file()
     {
-        $this->assertFileNotExists(app_path('Settings/Resources/Rules.php'));
+        $this->assertFileDoesNotExist(app_path('Settings/Resources/Rules.php'));
 
         Artisan::call('pbag:rules');
 
