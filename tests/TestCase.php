@@ -2,58 +2,69 @@
 
 namespace LaravelPropertyBag\tests;
 
-use Hash;
+use Illuminate\Support\Facades\Hash;
 use LaravelPropertyBag\ServiceProvider;
-use Illuminate\Contracts\Console\Kernel;
+use LaravelPropertyBag\tests\Classes\Admin;
+use LaravelPropertyBag\tests\Classes\Comment;
+use LaravelPropertyBag\tests\Classes\Group;
 use LaravelPropertyBag\tests\Classes\Post;
 use LaravelPropertyBag\tests\Classes\User;
-use LaravelPropertyBag\tests\Classes\Admin;
-use LaravelPropertyBag\tests\Classes\Group;
-use LaravelPropertyBag\tests\Classes\Comment;
-use Laravel\BrowserKitTesting\TestCase as BaseTestCase;
+use LaravelPropertyBag\tests\Migrations\CreateCommentsTable;
+use LaravelPropertyBag\tests\Migrations\CreateGroupsTable;
 use LaravelPropertyBag\tests\Migrations\CreatePostsTable;
 use LaravelPropertyBag\tests\Migrations\CreateUsersTable;
-use LaravelPropertyBag\tests\Migrations\CreateGroupsTable;
-use LaravelPropertyBag\tests\Migrations\CreateCommentsTable;
+use Orchestra\Testbench\TestCase as BaseTestCase;
 
 abstract class TestCase extends BaseTestCase
 {
     /**
      * Testing property bag register.
      *
-     * @var Collection
+     * @var \Illuminate\Support\Collection
      */
     protected $registered;
 
     /**
-     * Creates the application.
+     * Test user.
      *
-     * @return \Illuminate\Foundation\Application
+     * @var User
      */
-    public function createApplication()
+    protected $user;
+
+    /**
+     * Register the package service provider.
+     *
+     * @param \Illuminate\Foundation\Application $app
+     *
+     * @return array
+     */
+    protected function getPackageProviders($app)
     {
-        $app = require __DIR__.'/../vendor/laravel/laravel/bootstrap/app.php';
+        return [ServiceProvider::class];
+    }
 
-        $app->register(ServiceProvider::class);
+    /**
+     * Use an in-memory sqlite database for the test app.
+     *
+     * @param \Illuminate\Foundation\Application $app
+     */
+    protected function getEnvironmentSetUp($app)
+    {
+        $app['config']->set('database.default', 'sqlite');
 
-        $app->make(Kernel::class)->bootstrap();
-
-        return $app;
+        $app['config']->set('database.connections.sqlite', [
+            'driver'   => 'sqlite',
+            'database' => ':memory:',
+            'prefix'   => '',
+        ]);
     }
 
     /**
      * Setup DB and test variables before each test.
      */
-    protected function setUp()
+    protected function setUp(): void
     {
         parent::setUp();
-
-        $this->app['config']->set('database.default', 'sqlite');
-
-        $this->app['config']->set(
-            'database.connections.sqlite.database',
-            ':memory:'
-        );
 
         $this->migrate();
 
@@ -85,7 +96,7 @@ abstract class TestCase extends BaseTestCase
      * Make a user.
      *
      * @param string $name
-     * @param string $password
+     * @param string $email
      *
      * @return User
      */
@@ -104,7 +115,7 @@ abstract class TestCase extends BaseTestCase
      * Make an admin user (should fail to get settings).
      *
      * @param string $name
-     * @param string $password
+     * @param string $email
      *
      * @return Admin
      */
@@ -134,9 +145,9 @@ abstract class TestCase extends BaseTestCase
     }
 
     /**
-     * Make a group.
+     * Make a post.
      *
-     * @return Group
+     * @return Post
      */
     protected function makePost()
     {
@@ -148,9 +159,9 @@ abstract class TestCase extends BaseTestCase
     }
 
     /**
-     * Make a group.
+     * Make a comment.
      *
-     * @return Group
+     * @return Comment
      */
     protected function makeComment()
     {

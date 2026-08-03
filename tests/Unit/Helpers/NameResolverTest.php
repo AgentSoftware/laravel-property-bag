@@ -12,7 +12,7 @@ class NameResolverTest extends TestCase
     /** @var string $shortClassName */
     private $shortClassName;
 
-    protected function setUp()
+    protected function setUp(): void
     {
         parent::setUp();
 

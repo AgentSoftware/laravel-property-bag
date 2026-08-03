@@ -3,36 +3,32 @@
 namespace LaravelPropertyBag\tests\Unit;
 
 use Illuminate\Support\Collection;
-use LaravelPropertyBag\tests\TestCase;
+use LaravelPropertyBag\Exceptions\InvalidSettingsValue;
+use LaravelPropertyBag\Exceptions\ResourceNotFound;
+use LaravelPropertyBag\Settings\ResourceConfig;
 use LaravelPropertyBag\Settings\Settings;
 use LaravelPropertyBag\tests\Classes\User;
-use LaravelPropertyBag\Settings\ResourceConfig;
-use LaravelPropertyBag\Exceptions\InvalidSettingsValue;
+use LaravelPropertyBag\tests\TestCase;
+use PHPUnit\Framework\Attributes\Test;
 
 class SettingsTest extends TestCase
 {
-    /**
-     * @test
-     */
+    #[Test]
     public function a_resource_can_access_the_settings_object()
     {
         $this->assertInstanceOf(Settings::class, $this->user->settings());
     }
 
-    /**
-     * @test
-     *
-     * @expectedException LaravelPropertyBag\Exceptions\ResourceNotFound
-     * @expectedExceptionMessage Class App\Settings\AdminSettings not found.
-     */
+    #[Test]
     public function exception_is_thrown_when_config_file_not_found()
     {
+        $this->expectException(ResourceNotFound::class);
+        $this->expectExceptionMessage('Class App\Settings\AdminSettings not found.');
+
         $this->makeAdmin()->settings();
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function settings_class_has_registered_settings()
     {
         $registered = $this->user->settings()->getRegistered();
@@ -42,9 +38,7 @@ class SettingsTest extends TestCase
         $this->assertCount(17, $registered->flatten());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function resource_config_can_access_orignal_model()
     {
         $resourceConfig = $this->user->settings()->getResourceConfig();
@@ -58,9 +52,7 @@ class SettingsTest extends TestCase
         $this->assertEquals($this->user->id, $resource->id);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function settings_class_can_check_for_registered_settings()
     {
         $group = $this->makeGroup();
@@ -70,9 +62,7 @@ class SettingsTest extends TestCase
         $this->assertTrue($settings->isRegistered('test_settings1'));
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function a_valid_setting_key_value_pair_passes_validation()
     {
         $result = $this->user->settings()->isValid('test_settings1', 'bananas');
@@ -80,9 +70,7 @@ class SettingsTest extends TestCase
         $this->assertTrue($result);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function an_invalid_setting_key_fails_validation()
     {
         $result = $this->user->settings()->isValid('fake', true);
@@ -90,9 +78,7 @@ class SettingsTest extends TestCase
         $this->assertFalse($result);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function an_invalid_setting_value_fails_validation()
     {
         $result = $this->user->settings()->isValid('test_settings2', 'ok');
@@ -100,9 +86,7 @@ class SettingsTest extends TestCase
         $this->assertFalse($result);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function a_default_value_can_de_detected()
     {
         $result = $this->user->settings()->isDefault('test_settings3', false);
@@ -110,9 +94,7 @@ class SettingsTest extends TestCase
         $this->assertTrue($result);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function a_non_default_value_can_de_detected()
     {
         $result = $this->user->settings()->isDefault('test_settings3', true);
@@ -120,9 +102,7 @@ class SettingsTest extends TestCase
         $this->assertFalse($result);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function a_resource_can_get_the_default_value()
     {
         $default = $this->user->settings()->getDefault('test_settings1');
@@ -130,9 +110,7 @@ class SettingsTest extends TestCase
         $this->assertEquals('monkey', $default);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function a_resource_can_get_all_the_default_values()
     {
         $defaults = $this->user->settings()->allDefaults();
@@ -144,9 +122,7 @@ class SettingsTest extends TestCase
         ], $defaults->all());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function a_resource_can_get_the_allowed_values()
     {
         $allowed = $this->user->settings()->getAllowed('test_settings1');
@@ -154,9 +130,7 @@ class SettingsTest extends TestCase
         $this->assertEquals(['bananas', 'grapes', 8, 'monkey'], $allowed->all());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function a_resource_can_get_all_allowed_values()
     {
         $allowed = $this->user->settings()->allAllowed()->flatten();
@@ -164,23 +138,19 @@ class SettingsTest extends TestCase
         $this->assertCount(14, $allowed);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function adding_a_new_setting_creates_a_new_user_setting_record()
     {
         $this->user->settings()->set(['test_settings3' => true]);
 
-        $this->seeInDatabase('property_bag', [
+        $this->assertDatabaseHas('property_bag', [
             'resource_id'   => $this->user->id,
             'resource_type' => 'LaravelPropertyBag\tests\Classes\User',
             'value'         => json_encode('[true]'),
         ]);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function adding_a_new_setting_refreshes_settings_on_object()
     {
         $this->assertEmpty($this->user->settings()->allSaved());
@@ -195,9 +165,7 @@ class SettingsTest extends TestCase
         );
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function updating_a_setting_updates_the_setting_record()
     {
         $this->actingAs($this->user);
@@ -211,7 +179,7 @@ class SettingsTest extends TestCase
             $settings->allSaved()->all()
         );
 
-        $this->seeInDatabase('property_bag', [
+        $this->assertDatabaseHas('property_bag', [
             'resource_id'   => $this->user->id,
             'resource_type' => 'LaravelPropertyBag\tests\Classes\User',
             'key'           => 'test_settings1',
@@ -225,7 +193,7 @@ class SettingsTest extends TestCase
             $settings->allSaved()->all()
         );
 
-        $this->seeInDatabase('property_bag', [
+        $this->assertDatabaseHas('property_bag', [
             'resource_id'   => $this->user->id,
             'resource_type' => 'LaravelPropertyBag\tests\Classes\User',
             'key'           => 'test_settings1',
@@ -233,9 +201,7 @@ class SettingsTest extends TestCase
         ]);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function a_user_can_set_many_settings_at_once()
     {
         $this->actingAs($this->user);
@@ -253,14 +219,14 @@ class SettingsTest extends TestCase
 
         $this->assertEquals($test, $settings->allSaved()->all());
 
-        $this->seeInDatabase('property_bag', [
+        $this->assertDatabaseHas('property_bag', [
             'resource_id'   => $this->user->id,
             'resource_type' => 'LaravelPropertyBag\tests\Classes\User',
             'key'           => 'test_settings1',
             'value'         => json_encode('["grapes"]'),
         ]);
 
-        $this->seeInDatabase('property_bag', [
+        $this->assertDatabaseHas('property_bag', [
             'resource_id'   => $this->user->id,
             'resource_type' => 'LaravelPropertyBag\tests\Classes\User',
             'key'           => 'test_settings2',
@@ -268,9 +234,7 @@ class SettingsTest extends TestCase
         ]);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function a_user_can_get_a_setting()
     {
         $this->actingAs($this->user);
@@ -284,9 +248,7 @@ class SettingsTest extends TestCase
         $this->assertFalse($result);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function if_the_setting_is_not_set_the_default_value_is_returned()
     {
         $this->actingAs($this->user);
@@ -296,9 +258,7 @@ class SettingsTest extends TestCase
         $this->assertEquals('monkey', $result);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function a_user_can_get_all_the_settings_being_used()
     {
         $this->actingAs($this->user);
@@ -316,9 +276,7 @@ class SettingsTest extends TestCase
         ], $this->user->settings()->all()->all());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function a_user_can_get_all_the_settings_saved_in_the_database()
     {
         $this->actingAs($this->user);
@@ -334,9 +292,7 @@ class SettingsTest extends TestCase
         ], $this->user->settings()->allSaved()->all());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function a_user_can_not_get_an_invalid_setting()
     {
         $this->actingAs($this->user);
@@ -348,9 +304,7 @@ class SettingsTest extends TestCase
         $this->assertNull($result);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function if_default_value_is_set_database_entry_is_deleted()
     {
         $this->actingAs($this->user);
@@ -361,7 +315,7 @@ class SettingsTest extends TestCase
             'test_settings1' => 'grapes',
         ]);
 
-        $this->seeInDatabase('property_bag', [
+        $this->assertDatabaseHas('property_bag', [
             'resource_id' => $this->user->id,
             'key'         => 'test_settings1',
             'value'       => json_encode('["grapes"]'),
@@ -371,7 +325,7 @@ class SettingsTest extends TestCase
             'test_settings1' => 'monkey',
         ]);
 
-        $this->dontSeeInDatabase('property_bag', [
+        $this->assertDatabaseMissing('property_bag', [
             'resource_id'   => $this->user->id,
             'resource_type' => 'LaravelPropertyBag\tests\Classes\User',
             'key'           => 'test_settings1',
@@ -379,14 +333,12 @@ class SettingsTest extends TestCase
         ]);
     }
 
-    /**
-     * @test
-     *
-     * @expectedException LaravelPropertyBag\Exceptions\InvalidSettingsValue
-     * @expectedExceptionMessage Given value is not a registered allowed value for test_settings1.
-     */
+    #[Test]
     public function setting_an_unallowed_setting_value_throws_exception()
     {
+        $this->expectException(InvalidSettingsValue::class);
+        $this->expectExceptionMessage('Given value is not a registered allowed value for test_settings1.');
+
         $this->actingAs($this->user);
 
         $this->user->settings()->set([
@@ -394,9 +346,7 @@ class SettingsTest extends TestCase
         ]);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function invalid_setting_value_exception_should_contain_failed_key_name()
     {
         $this->actingAs($this->user);
@@ -410,9 +360,7 @@ class SettingsTest extends TestCase
         }
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function settings_can_be_registered_in_config_file_method()
     {
         $post = $this->makePost();
@@ -436,9 +384,7 @@ class SettingsTest extends TestCase
         $this->assertEquals($actual, $allowed->all());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function settings_with_allowed_rule_can_be_set()
     {
         $comment = $this->makeComment();
@@ -463,22 +409,18 @@ class SettingsTest extends TestCase
         $this->assertEquals($settings, $comment->settings()->all()->all());
     }
 
-    /**
-     * @test
-     *
-     * @expectedException LaravelPropertyBag\Exceptions\InvalidSettingsValue
-     * @expectedExceptionMessage Given value is not a registered allowed value for alpha.
-     */
+    #[Test]
     public function settings_with_invalid_rule_values_can_not_be_set()
     {
+        $this->expectException(InvalidSettingsValue::class);
+        $this->expectExceptionMessage('Given value is not a registered allowed value for alpha.');
+
         $comment = $this->makeComment();
 
         $comment->settings()->set(['alpha' => 4]);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function keyIs_returns_true_if_key_value_is_set()
     {
         $this->actingAs($this->user);
@@ -495,9 +437,7 @@ class SettingsTest extends TestCase
         );
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function keyIs_returns_false_if_key_value_is_not_set()
     {
         $this->actingAs($this->user);
@@ -514,9 +454,7 @@ class SettingsTest extends TestCase
         );
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function reset_resets_setting_to_default_value()
     {
         $this->actingAs($this->user);
@@ -533,9 +471,7 @@ class SettingsTest extends TestCase
         $this->assertEquals('monkey', $this->user->settings('test_settings1'));
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function created_setting_is_immediately_available_for_reading()
     {
         $settings = $this->user->settings();
@@ -546,9 +482,7 @@ class SettingsTest extends TestCase
         $this->assertEquals(true, $settings->get('test_settings3'));
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function updated_setting_is_immediately_available_for_reading()
     {
         $settings = $this->user->settings();
@@ -560,9 +494,7 @@ class SettingsTest extends TestCase
         $this->assertEquals('grapes', $settings->get('test_settings1'));
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function deleted_setting_is_immediately_available_for_reading()
     {
         $settings = $this->user->settings();
@@ -576,9 +508,7 @@ class SettingsTest extends TestCase
         $this->assertEquals('monkey', $settings->get('test_settings1'));
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function created_setting_is_immediately_available_for_reading_with_preloaded_relation()
     {
         $this->user->load('propertyBag');
@@ -590,9 +520,7 @@ class SettingsTest extends TestCase
         $this->assertEquals(true, $settings->get('test_settings3'));
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function updated_setting_is_immediately_available_for_reading_with_preloaded_relation()
     {
         $this->user->load('propertyBag');
@@ -605,9 +533,7 @@ class SettingsTest extends TestCase
         $this->assertEquals('grapes', $settings->get('test_settings1'));
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function deleted_setting_is_immediately_available_for_reading_with_preloaded_relation()
     {
         $this->user->load('propertyBag');
